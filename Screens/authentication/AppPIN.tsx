@@ -1,8 +1,8 @@
 import {Platform, Pressable, StyleSheet} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
 import {AppHeader, AppScreen, AppText, AppView, OTPInput} from '@/components';
 import {useNavigation} from '@react-navigation/native';
-import {AppPINScreenProps} from '@/types/typings';
+import {AppPINScreenProps, AuthMainNavigation} from '@/types/typings';
 import routes from '@/navigation/routes';
 import {useAppSelector} from '@/Hooks/reduxHook';
 import {selectUser} from '@/store/slices/userSlice';
@@ -13,7 +13,8 @@ import {getData} from '@/Utils/useAsyncStorage';
 import {HAS_SET_NEWPIN} from './GetStartedScreen';
 
 const AppPIN = () => {
-  const {reset} = useNavigation<AppPINScreenProps>();
+  const {reset} = useNavigation<AuthMainNavigation>();
+  const {replace} = useNavigation<AppPINScreenProps>();
   const [appPin, setAppPin] = useState('');
   const [error, setError] = useState<boolean>(false);
   const user = useAppSelector(selectUser);
@@ -45,7 +46,7 @@ const AppPIN = () => {
     }
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     getPinState();
   }, []);
 
@@ -57,7 +58,7 @@ const AppPIN = () => {
         Welcome back
       </AppText>
       <AppText className="text-2xl text-white font-LEXEND_700 -mt-[5px]">
-        {user.fullname.split(' ')[0]}
+        {user.first_name}
       </AppText>
       <AppText className="-mt-[2px] text-sm text-white font-MANROPE_400">
         Use pin to continue

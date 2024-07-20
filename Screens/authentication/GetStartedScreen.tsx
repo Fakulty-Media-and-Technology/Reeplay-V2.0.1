@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {
   AppButton,
   AppText,
@@ -27,8 +27,10 @@ import {selectUser} from '@/store/slices/userSlice';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
 import {AuthMainNavigation, GetStartedScreenProps} from '@/types/typings';
 import routes from '@/navigation/routes';
-import {getData} from '@/Utils/useAsyncStorage';
+import {getData, storeData} from '@/Utils/useAsyncStorage';
 import ReactNativeBiometrics, {BiometryTypes} from 'react-native-biometrics';
+import {handleLoginAPI} from '@/api/auth.api';
+import {getProfileDetails} from '@/api/profile.api';
 
 const hasUserDetails = 'user';
 export const HAS_SET_NEWPIN = 'new_pin';
@@ -43,13 +45,19 @@ const GetStartedScreen = () => {
   const [isPause, setIsPause] = useState(false);
   const [lock, setLock] = useState(false);
   const [biometricsIsSupport, setBiometricsIsSupport] = useState(true);
+  const [login, setLogin] = useState(false);
   const isFocused = useIsFocused();
   const rnBiometrics = new ReactNativeBiometrics();
 
-  function handleLogin() {
+  async function handleLogin() {
     console.log(lock);
     if (lock) {
-      navigate(routes.APP_PIN);
+      const hasPin = await getData(HAS_SET_NEWPIN);
+      if (hasPin) {
+        navigate(routes.APP_PIN);
+      } else {
+        replace(routes.SET_PIN);
+      }
     } else {
       navigation.reset({
         index: 0,
@@ -100,6 +108,33 @@ const GetStartedScreen = () => {
     }
   }
 
+  async function backgroundLogin() {
+    const user = await getData(hasUserDetails);
+    const credentials = await getData('LOGINS');
+    if (!user || !credentials) return;
+    try {
+      const email = JSON.parse(user).profile.email;
+      const password = JSON.parse(credentials);
+      const res = await handleLoginAPI({
+        email,
+        password,
+      });
+      console.log(res);
+      if (res.ok && res.data) {
+        //dispatch to redux
+        await storeData('AUTH_TOKEN', res.data.data.token);
+        const profileRes = await getProfileDetails(res.data.data.token);
+        console.log(profileRes.data?.data);
+        if (profileRes.ok && profileRes.data) {
+          await storeData(hasUserDetails, JSON.stringify(profileRes.data.data));
+          await storeData('LOGINS', JSON.stringify(password));
+        }
+      } else {
+        setLogin(true);
+      }
+    } catch (error) {}
+  }
+
   async function checkBiometrics() {
     rnBiometrics.isSensorAvailable().then(resultObject => {
       const {available, biometryType} = resultObject;
@@ -118,7 +153,8 @@ const GetStartedScreen = () => {
     });
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    backgroundLogin();
     getLockState();
     checkBiometrics();
   }, []);
@@ -163,7 +199,7 @@ const GetStartedScreen = () => {
             <UnmuteIcon style={{marginTop: Platform.OS === 'ios' ? 0 : -10}} />
           )}
         </TouchableOpacity>
-        {user.fullname !== '' && (
+        {user._id !== '' && (
           <>
             <AppText className="-mt-1 text-[24px] text-white font-LEXEND_700">
               Welcome back
@@ -171,7 +207,7 @@ const GetStartedScreen = () => {
             <AppText
               style={Platform.OS === 'ios' && {marginTop: -3}}
               className="capitalize text-[24px] -mt-[8px] text-white font-LEXEND_700">
-              {user.fullname.split(' ')[0]}
+              {user.first_name}
             </AppText>
             <AppText className="text-base -mt-[2px] text-white font-MANROPE_400">
               Login to continue
@@ -181,12 +217,14 @@ const GetStartedScreen = () => {
       </AppView>
 
       <AppView className="absolute bottom-8 z-[99px] items-center w-full">
-        {user.fullname !== '' ? (
+        {user._id !== '' ? (
           <AppView className="flex-row items-center justify-center gap-x-1">
             <AppButton
               title="Continue to Login"
               bgColor={colors.RED}
-              onPress={handleLogin}
+              onPress={() =>
+                login ? replace(routes.LOGIN_SCREEN) : handleLogin()
+              }
               style={{
                 borderRadius: 0,
                 width: Size.getWidth() * 0.5,

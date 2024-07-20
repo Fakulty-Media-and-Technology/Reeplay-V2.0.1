@@ -20,12 +20,14 @@ import Size from '@/Utils/useResponsiveSize';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {InterestScreenProps, InterestScreenRouteProps} from '@/types/typings';
 import routes from '@/navigation/routes';
+import {addinterests} from '@/api/profile.api';
 
 const InterestScreen = () => {
   const navigation = useNavigation<InterestScreenProps>();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isMaxReached, setIsMaxReached] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const route = useRoute<InterestScreenRouteProps>();
   const isSettings = route.params.isSettings;
 
@@ -51,25 +53,34 @@ const InterestScreen = () => {
     }
   };
 
-  function handleInterests() {
-    if (isSelected.length > 0) {
-      setLoading(true);
-      //TODO: handle interest endpoint and remove setTimeout
-      setTimeout(() => {
-        if (isSettings) {
-          navigation.navigate(routes.SETTINGS_SCREEN);
+  async function handleInterests() {
+    try {
+      if (selectedItems.length > 0) {
+        setLoading(true);
+        //TODO: handle interest endpoint and remove setTimeout
+
+        const res = await addinterests({interest: selectedItems});
+        if (res.ok && res.data) {
+          if (isSettings) {
+            navigation.navigate(routes.SETTINGS_SCREEN);
+          } else {
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: routes.TAB_MAIN,
+                },
+              ],
+            });
+          }
         } else {
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: routes.TAB_MAIN,
-              },
-            ],
-          });
+          // handle error
+          setError(res.data?.message!);
+          setTimeout(setError, 2000, '');
         }
-        setLoading(false);
-      }, 3000);
+      }
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -85,6 +96,14 @@ const InterestScreen = () => {
         We'll tailor an experience based on your interests, creating a
         personalized experience on reeplay. You can always change later.
       </AppText>
+
+      {error.length > 0 && (
+        <AppText
+          style={{alignSelf: 'center'}}
+          className="max-w-[120px] text-red text-[16px] text-center font-MANROPE_500 mt-3">
+          {error}
+        </AppText>
+      )}
 
       {Platform.OS === 'ios' && (
         <ScrollView

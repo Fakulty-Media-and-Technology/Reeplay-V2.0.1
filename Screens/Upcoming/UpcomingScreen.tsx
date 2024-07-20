@@ -8,11 +8,31 @@ import Size from '@/Utils/useResponsiveSize';
 import BlurView from 'react-native-blur-effect';
 import {BlurView as Blur} from '@react-native-community/blur';
 import Orientation from 'react-native-orientation-locker';
+import {getUpcomingEvents} from '@/api/upcomingEvents.api';
+import {IUpcomingEvents} from '@/types/api/upcomingEvents.types';
 
 const UpcomingScreen = () => {
   const [playingIndexes, setPlayingIndexes] = useState<number[]>([]);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [orientation, setOrientation] = useState<string | null>(null);
+  const [upcomingEvents, setUpcomingEvents] = useState<IUpcomingEvents[]>([]);
+
+  async function handleUpcomingEvents() {
+    try {
+      const res = await getUpcomingEvents();
+      if (res.ok && res.data) {
+        setUpcomingEvents(res.data.data);
+      } else {
+        //if endpoint fails
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useLayoutEffect(() => {
+    handleUpcomingEvents();
+  }, []);
 
   useEffect(() => {
     Orientation.lockToPortrait();

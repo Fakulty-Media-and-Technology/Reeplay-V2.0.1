@@ -1,4 +1,8 @@
 import {Dimensions} from 'react-native';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 
 function useResponsiveSize(size: number, otherParams?: string): number {
   const {height, width} = Dimensions.get('window');
@@ -41,6 +45,14 @@ const Size = {
 
   getWidth() {
     return useResponsiveSize(1, 'getWidth');
+  },
+
+  wp(size: number) {
+    return wp(size);
+  },
+
+  hp(size: number) {
+    return hp(size);
   },
 };
 

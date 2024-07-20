@@ -38,8 +38,8 @@ import {getData, removeData} from '@/Utils/useAsyncStorage';
 import {HAS_SKIPPED} from '../authentication/components/AuthFormComponent';
 import {SignUpNavigationProps} from '../authentication/SignUpScreen';
 import {hasUserDetails} from '../Splashscreen/Splashscreen';
-import {useAppDispatch} from '@/Hooks/reduxHook';
-import {logout} from '@/store/slices/userSlice';
+import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
+import {logout, selectUser} from '@/store/slices/userSlice';
 
 const tabs = [
   'Account',
@@ -60,6 +60,7 @@ export type MenuNavigationProps = CompositeNavigationProp<
 >;
 
 const MenuScreen = () => {
+  const user = useAppSelector(selectUser);
   const {goBack, navigate} = useNavigation<DashboardNavProps>();
   const navigation = useNavigation<AppStackNavigation>();
   const nav = useNavigation<MenuNavigationProps>();
@@ -113,8 +114,8 @@ const MenuScreen = () => {
                 source={require('@/assets/images/bbn.png')}
                 className="w-[40px] h-[40px] rounded-full"
               />
-              <AppText className="font-MANROPE_700 text-base text-white">
-                Edward Bette
+              <AppText className="font-MANROPE_700 capitalize text-base text-white">
+                {user.first_name} {user.last_name}
               </AppText>
             </AppView>
           )}

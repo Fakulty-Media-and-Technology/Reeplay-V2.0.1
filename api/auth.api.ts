@@ -1,0 +1,55 @@
+import {
+  ICreatePIN,
+  IGeneric,
+  ILoginData,
+  ILoginDataResponse,
+  IResetPasswordData,
+  ISignUpData,
+  ISignUpDataResponse,
+  IVerifyAcc,
+} from '@/types/api/auth.types';
+import {BASE_URL} from '@env';
+import {create} from 'apisauce';
+
+const baseApi = create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 12000,
+  timeoutErrorMessage: 'Request Timed Out',
+});
+
+export const handleSignUpAPI = async (data: ISignUpData) =>
+  await baseApi.post<ISignUpDataResponse>(`/customers/signup`, data);
+
+export const handleLoginAPI = async (data: ILoginData) =>
+  await baseApi.post<ILoginDataResponse>(`/customers/general-signin`, data);
+
+export const verifyAccount = async (data: IVerifyAcc) =>
+  await baseApi.post<ILoginDataResponse>(
+    `/customers/signup/verifyaccount`,
+    data,
+  );
+
+export const resendToken = async (data: {email: string}) =>
+  await baseApi.post<IGeneric>(`/customers/pass-reset/get-token`, data);
+
+export const resendVerificationToken = async (data: {
+  email: string;
+  token: string;
+}) =>
+  await baseApi.get<IGeneric>(
+    `/customers/verification/get-token?email=${data.email}`,
+    data,
+  );
+
+export const resetPassword = async (data: IResetPasswordData) =>
+  await baseApi.post<IGeneric>(`/customers/pass-reset/change-pass`, data);
+
+export const handleCreatePIN = async (data: ICreatePIN, token: string) =>
+  await baseApi.post<IGeneric>(`/customers/signup/createpin`, data, {
+    headers: {
+      'customer-auth': token,
+    },
+  });

@@ -2,11 +2,13 @@ import {Platform, StyleSheet, Text, View} from 'react-native';
 import React, {useState} from 'react';
 import {AppHeader, AppScreen, AppText, AppView, OTPInput} from '@/components';
 import {useNavigation} from '@react-navigation/native';
-import {SetPinScreenProps} from '@/types/typings';
+import {AuthMainNavigation, SetPinScreenProps} from '@/types/typings';
 import routes from '@/navigation/routes';
 
 const CreatePIN = () => {
-  const {navigate} = useNavigation<SetPinScreenProps>();
+  const {navigate, replace} = useNavigation<SetPinScreenProps>();
+  // const {replace} = useNavigation<AuthMainNavigation>();
+
   const [pin1, setPin1] = useState<string>('');
 
   const handlePin = (pin: string) => {
@@ -19,7 +21,7 @@ const CreatePIN = () => {
 
   return (
     <AppScreen containerStyle={{paddingTop: 10}}>
-      <AppHeader />
+      <AppHeader handleFunc={() => replace(routes.LOGIN_SCREEN)} />
 
       <AppText className="text-2xl text-white font-LEXEND_700 mt-12">
         Create your new

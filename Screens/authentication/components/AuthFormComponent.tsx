@@ -26,6 +26,12 @@ import {CountryPicker} from 'react-native-country-codes-picker';
 import {removeData, storeData} from '@/Utils/useAsyncStorage';
 import country_codes from '@/configs/country_codes';
 import BottomSheet from './BottomModal';
+import {handleLoginAPI, handleSignUpAPI, resendToken} from '@/api/auth.api';
+import {GUEST_TOKEN} from '@env';
+import {getProfileDetails} from '@/api/profile.api';
+import {useAppDispatch} from '@/Hooks/reduxHook';
+import {setCredentials} from '@/store/slices/userSlice';
+import {hasUserDetails} from '@/Screens/Splashscreen/Splashscreen';
 
 const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const HAS_SKIPPED = 'SKIPPED';
@@ -38,6 +44,7 @@ interface Props {
     cc: string;
     cf: string;
   };
+  setEmail?: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const AuthFormComponent = ({
@@ -45,13 +52,16 @@ const AuthFormComponent = ({
   trigger,
   countryCode,
   setIsCountryCode,
+  setEmail: setResetEmail,
 }: Props) => {
+  const dispatch = useAppDispatch();
   const navLogin = useNavigation<LoginScreenProps>();
   const navSignup = useNavigation<SignUpScreenProps>();
   const {reset} = useNavigation<MainLoginScreenProps>();
   const navigation = useNavigation<AuthMainNavigation>();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [cpassword, setCpassword] = useState<string>('');
   const [fullname, setFullname] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
   const [phoneNo, setPhoneNo] = useState<string>('');
@@ -62,6 +72,7 @@ const AuthFormComponent = ({
   async function resetState() {
     setEmail('');
     setPassword('');
+    setCpassword('');
     setFullname('');
     setLastName('');
     setPhoneNo('');
@@ -69,39 +80,79 @@ const AuthFormComponent = ({
     await removeData(HAS_SKIPPED);
   }
 
-  function handleLogin() {
+  async function handleLogin() {
     if (email === '' && password === '') {
       setError('Invalid Credentials');
       setTimeout(() => {
         setError('');
       }, 2000);
     } else {
-      if (regex.test(email)) {
-        setLoading(true);
-        //Auth endpoint
-        setTimeout(() => {
-          //navigate to home
-          reset({
-            index: 0,
-            routes: [
-              {
-                name: routes.TAB_MAIN,
-              },
-            ],
+      try {
+        if (regex.test(email)) {
+          const res = await handleLoginAPI({
+            email,
+            password,
           });
-          setLoading(false);
-          resetState();
-        }, 2500);
-      } else {
-        setError('Invalid Email');
+          console.log(res);
+          if (res.ok && res.data) {
+            //dispatch to redux
+            await storeData('AUTH_TOKEN', res.data.data.token);
+            const profileRes = await getProfileDetails(res.data.data.token);
+            console.log(profileRes);
+            if (profileRes.ok && profileRes.data) {
+              await storeData(
+                hasUserDetails,
+                JSON.stringify(profileRes.data.data),
+              );
+              await storeData('LOGINS', JSON.stringify(password));
+              dispatch(setCredentials(profileRes.data.data));
+              reset({
+                index: 0,
+                routes: [
+                  {
+                    name: routes.TAB_MAIN,
+                  },
+                ],
+              });
+              resetState();
+            }
+          } else {
+            if (
+              res.data &&
+              res.data.message.split(':')[1].trim() ===
+                'user account not verified, check your email for verification code'
+            ) {
+              let userData = {
+                email,
+              };
+              navLogin.navigate(routes.VEERIFY_PHONE, {
+                userDetails: userData,
+              });
+            } else {
+              res.data && setError(res.data.message.split(':')[1]);
+              setTimeout(() => {
+                setError('');
+              }, 5000);
+            }
+          }
+        } else {
+          setError('Invalid Email');
+          setTimeout(() => {
+            setError('');
+          }, 2000);
+        }
+      } catch (error) {
+        setError('Opps! Something went wrong');
         setTimeout(() => {
           setError('');
         }, 2000);
+      } finally {
+        setLoading(false);
       }
     }
   }
 
-  function handleRest() {
+  async function handleRest() {
     if (email === '') {
       setError('Invalid Credentials');
       setTimeout(() => {
@@ -111,11 +162,21 @@ const AuthFormComponent = ({
       if (regex.test(email)) {
         setLoading(true);
         //Auth endpoint
-        setTimeout(() => {
-          if (trigger) trigger();
+        const res = await resendToken({email});
+        console.log(res);
+        if (res.ok) {
           setLoading(false);
+          setResetEmail && setResetEmail(email);
+          if (trigger) trigger();
           resetState();
-        }, 2500);
+        } else {
+          const msg = res.data ? res.data.message : '';
+          setError(msg.split(':')[1]);
+          setTimeout(() => {
+            setError('');
+          }, 2000);
+          setLoading(false);
+        }
       } else {
         setError('Invalid Email');
         setTimeout(() => {
@@ -132,34 +193,63 @@ const AuthFormComponent = ({
         setError('');
       }, 2000);
     } else {
-      if (regex.test(email)) {
-        setLoading(true);
-        let userData = {
-          email,
-          password,
-          fullname: `${fullname} ${lastName}`,
-          phoneNo: `${countryCode && countryCode.cc}${phoneNo}`,
-        };
-        //TODO: RUN actual signup endpoint here
-
-        setTimeout(() => {
-          navSignup.navigate(routes.VEERIFY_PHONE, {
-            userDetails: userData,
+      try {
+        if (regex.test(email)) {
+          setLoading(true);
+          let userData = {
+            email,
+            password,
+            fullname: `${fullname} ${lastName}`,
+            phoneNo: `${countryCode && countryCode.cc}${phoneNo}`,
+          };
+          //TODO: RUN actual signup endpoint here
+          const res = await handleSignUpAPI({
+            email,
+            password,
+            cpassword: password,
+            first_name: fullname,
+            last_name: lastName,
+            country_code: `${countryCode && countryCode.cc}`,
+            mobile: phoneNo,
           });
-          setLoading(false);
-          resetState();
-        }, 2500);
-      } else {
-        setError('Invalid Email');
+
+          console.log(res);
+
+          if (res.ok && res.data) {
+            console.log(res.data);
+            navSignup.navigate(routes.VEERIFY_PHONE, {
+              userDetails: userData,
+            });
+            await storeData('LOGINS', JSON.stringify(password));
+            setLoading(false);
+            resetState();
+          } else {
+            setLoading(false);
+            res.data && setError(res.data.message);
+            setTimeout(() => {
+              setError('');
+            }, 6000);
+          }
+        } else {
+          setError('Invalid Email');
+          setTimeout(() => {
+            setError('');
+          }, 2000);
+        }
+      } catch (error) {
+        setError('Opps! something went wrong');
         setTimeout(() => {
           setError('');
         }, 2000);
+      } finally {
+        setLoading(false);
       }
     }
   }
 
   async function handleSkip() {
     await storeData(HAS_SKIPPED, 'true');
+    await storeData('AUTH_TOKEN', GUEST_TOKEN);
     //navigate to home
     reset({
       index: 0,
@@ -192,6 +282,8 @@ const AuthFormComponent = ({
               value={fullname}
               onChangeText={setFullname}
               placeholderTextColor={colors.GREY_100}
+              autoCapitalize="none"
+              autoCorrect={false}
               style={[
                 styles.textInput,
                 {flex: 1, marginRight: 10},
@@ -207,6 +299,8 @@ const AuthFormComponent = ({
               value={lastName}
               onChangeText={setLastName}
               placeholderTextColor={colors.GREY_100}
+              autoCapitalize="none"
+              autoCorrect={false}
               style={[
                 styles.textInput,
                 {flex: 1},
@@ -253,6 +347,8 @@ const AuthFormComponent = ({
         value={email}
         onChangeText={setEmail}
         placeholderTextColor={colors.GREY_100}
+        autoCapitalize="none"
+        autoCorrect={false}
         style={[
           styles.textInput,
           Platform.OS === 'android' && {
@@ -280,6 +376,8 @@ const AuthFormComponent = ({
             placeholderTextColor={colors.GREY_100}
             secureTextEntry={toogle}
             style={[styles.text, {flex: 1}]}
+            autoCapitalize="none"
+            autoCorrect={false}
           />
           <TouchableOpacity
             onPress={setToogle}

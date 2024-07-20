@@ -49,8 +49,8 @@ export type SetPinScreenProps = NativeStackNavigationProp<
 >;
 
 export type AppPINScreenProps = NativeStackNavigationProp<
-  RootStackParamList,
-  'SetNewPINScreen'
+  AuthStackParamList,
+  'AppPINScreen'
 >;
 
 export type SetNewPINScreenProps = NativeStackNavigationProp<

@@ -27,9 +27,6 @@ export type AuthStackParamList = {
   [routes.VEERIFY_PHONE]: {
     userDetails: {
       email: string;
-      password: string;
-      fullname: string;
-      phoneNo: string;
     };
   };
   [routes.SET_NEW_PIN]: {

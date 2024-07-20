@@ -1,4 +1,11 @@
-import {Pressable, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import React, {useState} from 'react';
 import {
   AppButton,
@@ -25,16 +32,27 @@ import colors from '@/configs/colors';
 import Size from '@/Utils/useResponsiveSize';
 import {AccountdNavProps} from '@/types/typings';
 import routes from '@/navigation/routes';
-import {CameraOptions, launchImageLibrary} from 'react-native-image-picker';
+import {
+  Asset,
+  CameraOptions,
+  ImagePickerResponse,
+  launchImageLibrary,
+} from 'react-native-image-picker';
 import AppModal from '@/components/AppModal';
 import fonts from '@/configs/fonts';
 import {MenuNavigationProps} from './MenuScreen';
+import {useAppSelector} from '@/Hooks/reduxHook';
+import {selectUser} from '@/store/slices/userSlice';
+import {pickSingleImage} from '@/Utils/MediaPicker';
+import {uploadProfile} from '@/api/profile.api';
 
 const AccountScreen = () => {
   const {navigate} = useNavigation<AccountdNavProps>();
+  const user = useAppSelector(selectUser);
   const nav = useNavigation<MenuNavigationProps>();
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const billingService = false;
 
   let options: CameraOptions = {
@@ -45,10 +63,25 @@ const AccountScreen = () => {
   };
 
   const openGallery = async () => {
-    const result: any = await launchImageLibrary(options);
-    setProfilePic(result.assets[0].uri);
+    setLoading(true);
+    const result = await pickSingleImage();
+    if (result && result.uri && result.fileName && result.type) {
+      let data = new FormData();
+      data.append('fileHandle', 'photo');
+      data.append('photo', {
+        uri: result.uri,
+        name: result.fileName,
+        type: result.type,
+      });
 
-    //Run upload endpoint here...to save image to database
+      const res = await uploadProfile(data);
+      console.log(res);
+      if (res.ok && res.data) {
+        setLoading(false);
+      } else {
+        setLoading(false);
+      }
+    }
   };
 
   function handleLogout() {
@@ -67,21 +100,31 @@ const AccountScreen = () => {
 
         <AppView className="flex-row items-center justify-between mt-3">
           <AppView className="flex-row items-center gap-x-[14px]">
-            {profilePic === null ? (
-              <AppImage
-                source={require('@/assets/images/bbn.png')}
-                className="w-[64px] h-[64px] rounded-full"
-              />
-            ) : (
-              <AppImage
-                source={{uri: profilePic}}
-                className="w-[64px] h-[64px] rounded-full"
-              />
-            )}
+            <AppView className="relative items-center justify-center">
+              {profilePic === null ? (
+                <AppImage
+                  source={require('@/assets/images/bbn.png')}
+                  className="w-[64px] h-[64px] rounded-full"
+                />
+              ) : (
+                <AppImage
+                  source={{uri: profilePic}}
+                  className="w-[64px] h-[64px] rounded-full"
+                />
+              )}
+
+              {loading && (
+                <ActivityIndicator
+                  size={16}
+                  color={colors.WHITE}
+                  style={{position: 'absolute'}}
+                />
+              )}
+            </AppView>
 
             <AppView>
-              <AppText className="font-MANROPE_700 text-white text-lg">
-                Edward Bette
+              <AppText className="font-MANROPE_700 capitalize text-white text-lg">
+                {user.first_name} {user.last_name}
               </AppText>
               <AppText className="font-MANROPE_400 text-grey_100 text-[14px]">
                 Joined Dec 06, 2023
@@ -106,7 +149,7 @@ const AccountScreen = () => {
               <AppView className="flex-row items-center">
                 <AccountDashboard />
                 <AppText className="ml-2 font-MANROPE_400 text-base text-white">
-                  Reeplay@gmail.com
+                  {user.email}
                 </AppText>
               </AppView>
               {/* Arroa */}
@@ -145,7 +188,7 @@ const AccountScreen = () => {
               <AppView className="flex-row items-center">
                 <PhoneDashboard />
                 <AppText className="ml-2 font-MANROPE_400 text-base text-white">
-                  +2347057456832
+                  {user.mobile}
                 </AppText>
               </AppView>
               {/* Arroa */}
