@@ -93,6 +93,12 @@ PODS:
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
   - OpenSSL-Universal (1.1.1100)
+  - Paystack (3.0.17):
+    - Paystack/Core (= 3.0.17)
+  - paystack-react-native (0.2.1):
+    - Paystack
+    - React-Core
+  - Paystack/Core (3.0.17)
   - RCT-Folly (2022.05.16.00):
     - boost
     - DoubleConversion
@@ -1225,6 +1231,7 @@ DEPENDENCIES:
   - libevent (~> 2.1.12)
   - lottie-react-native (from `../node_modules/lottie-react-native`)
   - OpenSSL-Universal (= 1.1.1100)
+  - paystack-react-native (from `../node_modules/paystack-react-native`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
@@ -1305,6 +1312,7 @@ SPEC REPOS:
     - libwebp
     - lottie-ios
     - OpenSSL-Universal
+    - Paystack
     - SDWebImage
     - SDWebImageWebPCoder
     - SocketRocket
@@ -1327,6 +1335,8 @@ EXTERNAL SOURCES:
     :tag: hermes-2023-11-17-RNv0.73.0-21043a3fc062be445e56a2c10ecd8be028dd9cc5
   lottie-react-native:
     :path: "../node_modules/lottie-react-native"
+  paystack-react-native:
+    :path: "../node_modules/paystack-react-native"
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
@@ -1471,6 +1481,8 @@ SPEC CHECKSUMS:
   lottie-ios: e047b1d2e6239b787cc5e9755b988869cf190494
   lottie-react-native: 3b9199d34e014bcb71c46728992ef5c8026538bb
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
+  Paystack: 5a7a9d5c47ddfd76e3d84550d9ff1f49bf6d284c
+  paystack-react-native: b036dac7aeb1eb7690bca91cb288cbe232d5de81
   RCT-Folly: 7169b2b1c44399c76a47b5deaaba715eeeb476c0
   RCTRequired: 9b1e7e262745fb671e33c51c1078d093bd30e322
   RCTTypeSafety: a759e3b086eccf3e2cbf2493d22f28e082f958e6

@@ -23,6 +23,7 @@ const initialState: IProfile = {
     last_name: '',
     mobile: '',
     role: '',
+    createdAt: '',
   },
   photo_url: '',
 };
@@ -47,6 +48,6 @@ const userSlice = createSlice({
 export const {setCredentials, setCredentialsEmail, logout} = userSlice.actions;
 // Other code such as selectors can use the imported `RootState` type
 export const selectUser = (state: RootState) => state.user.profile;
-export const selectUserProfilePic = (state: RootState) => state.user.profile;
+export const selectUserProfilePic = (state: RootState) => state.user.photo_url;
 
 export default userSlice.reducer;

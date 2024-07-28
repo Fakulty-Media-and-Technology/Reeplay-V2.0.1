@@ -123,8 +123,8 @@ const GetStartedScreen = () => {
       if (res.ok && res.data) {
         //dispatch to redux
         await storeData('AUTH_TOKEN', res.data.data.token);
-        const profileRes = await getProfileDetails(res.data.data.token);
-        console.log(profileRes.data?.data);
+        const profileRes = await getProfileDetails();
+        console.log(profileRes);
         if (profileRes.ok && profileRes.data) {
           await storeData(hasUserDetails, JSON.stringify(profileRes.data.data));
           await storeData('LOGINS', JSON.stringify(password));

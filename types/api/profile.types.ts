@@ -13,6 +13,8 @@ export interface IProfile {
     mobile: string;
     country_code: string;
     role: string;
+    createdAt: string;
+    pin?: string;
   };
   photo_url: string;
 }

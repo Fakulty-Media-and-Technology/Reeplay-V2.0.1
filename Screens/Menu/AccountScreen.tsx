@@ -41,26 +41,25 @@ import {
 import AppModal from '@/components/AppModal';
 import fonts from '@/configs/fonts';
 import {MenuNavigationProps} from './MenuScreen';
-import {useAppSelector} from '@/Hooks/reduxHook';
-import {selectUser} from '@/store/slices/userSlice';
+import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
+import {
+  selectUser,
+  selectUserProfilePic,
+  setCredentials,
+} from '@/store/slices/userSlice';
 import {pickSingleImage} from '@/Utils/MediaPicker';
-import {uploadProfile} from '@/api/profile.api';
+import {getProfileDetails, uploadProfile} from '@/api/profile.api';
+import {formatDate} from '@/Utils/formatTime';
 
 const AccountScreen = () => {
+  const dispatch = useAppDispatch();
   const {navigate} = useNavigation<AccountdNavProps>();
   const user = useAppSelector(selectUser);
+  const profilePic = useAppSelector(selectUserProfilePic);
   const nav = useNavigation<MenuNavigationProps>();
-  const [profilePic, setProfilePic] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const billingService = false;
-
-  let options: CameraOptions = {
-    saveToPhotos: true,
-    mediaType: 'photo',
-    // includeBase64: true
-    // includeExtra: true,
-  };
 
   const openGallery = async () => {
     setLoading(true);
@@ -77,7 +76,11 @@ const AccountScreen = () => {
       const res = await uploadProfile(data);
       console.log(res);
       if (res.ok && res.data) {
-        setLoading(false);
+        const profileRes = await getProfileDetails();
+        if (profileRes.ok && profileRes.data) {
+          dispatch(setCredentials(profileRes.data.data));
+          setLoading(false);
+        }
       } else {
         setLoading(false);
       }
@@ -88,6 +91,8 @@ const AccountScreen = () => {
     nav.navigate(routes.AUTH);
     setShowModal(false);
   }
+
+  console.log(profilePic, 'pic', user);
 
   return (
     <>
@@ -101,7 +106,7 @@ const AccountScreen = () => {
         <AppView className="flex-row items-center justify-between mt-3">
           <AppView className="flex-row items-center gap-x-[14px]">
             <AppView className="relative items-center justify-center">
-              {profilePic === null ? (
+              {profilePic === 'no profile picture' ? (
                 <AppImage
                   source={require('@/assets/images/bbn.png')}
                   className="w-[64px] h-[64px] rounded-full"
@@ -127,7 +132,7 @@ const AccountScreen = () => {
                 {user.first_name} {user.last_name}
               </AppText>
               <AppText className="font-MANROPE_400 text-grey_100 text-[14px]">
-                Joined Dec 06, 2023
+                Joined {formatDate(user.createdAt)}
               </AppText>
             </AppView>
           </AppView>

@@ -38,8 +38,6 @@ const SetNewPIN = () => {
   const pin = route.params.pin;
 
   const handlePin = async () => {
-    const token = await getData('AUTH_TOKEN');
-    if (!token) return;
     if (code.length !== 4 || pin !== code) {
       setError(true);
       setMsg('Invalid PIN. Please try again');
@@ -51,14 +49,11 @@ const SetNewPIN = () => {
       try {
         setLoading(true);
         //Stored to local storage
-        const res = await handleCreatePIN(
-          {
-            pin,
-            cpin: code,
-            email: user.email,
-          },
-          token,
-        );
+        const res = await handleCreatePIN({
+          pin,
+          cpin: code,
+          email: user.email,
+        });
         if (res.ok && res.data) {
           await storeData(HAS_SET_NEWPIN, pin);
           setIsShowModal(true);

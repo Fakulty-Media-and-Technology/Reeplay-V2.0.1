@@ -17,13 +17,18 @@ import VerificationModal from '../authentication/components/VerificationModal';
 import SetChangePin from './SetChangePin';
 import {useNavigation} from '@react-navigation/native';
 import ComfirmPin from './ComfirmPin';
+import {useAppSelector} from '@/Hooks/reduxHook';
+import {selectUser} from '@/store/slices/userSlice';
+import {handleCreatePIN} from '@/api/auth.api';
 
 const HAS_SET_NEWPIN = 'new_pin';
 
 const ChangePin = () => {
+  const user = useAppSelector(selectUser);
   const {goBack} = useNavigation();
   const [code, setCode] = useState<string>('');
   const [error, setError] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [isShowModal, setIsShowModal] = useState<boolean>(false);
   const [step, setStep] = useState<string>('confirm');
@@ -32,22 +37,35 @@ const ChangePin = () => {
   const handlePin = async () => {
     if (code !== firstPin) {
       setError(true);
+      setErrorMsg('Incorrect PIN. Please try again');
       setTimeout(() => {
         setError(false);
       }, 5000);
       return;
     } else {
       setLoading(true);
-      await storeData(HAS_SET_NEWPIN, 'true');
-      //Probably save PIN to user's database
-      //Run update pin endpoint
-      setIsShowModal(true); //if successful run this
-      setTimeout(() => {
-        setIsShowModal(false);
-        setLoading(false);
-        goBack();
-        //remove set timeout and navigate
-      }, 3000);
+      const res = await handleCreatePIN({
+        pin: firstPin,
+        cpin: code,
+        email: user.email,
+      });
+
+      if (res.ok && res.data) {
+        await storeData(HAS_SET_NEWPIN, code);
+        setIsShowModal(true); //if successful run this
+        setTimeout(() => {
+          setIsShowModal(false);
+          setLoading(false);
+          goBack();
+          //remove set timeout and navigate
+        }, 3000);
+      } else {
+        setError(true);
+        setErrorMsg('Opps! something went wrong. Please try again');
+        setTimeout(() => {
+          setError(false);
+        }, 5000);
+      }
     }
   };
 
@@ -69,7 +87,7 @@ const ChangePin = () => {
               <AppText
                 style={{alignSelf: 'center'}}
                 className="max-w-[120px] text-red text-[16px] text-center font-MANROPE_500 mt-3">
-                Incorrect PIN. Please try again
+                {errorMsg}
               </AppText>
             ) : (
               <AppText

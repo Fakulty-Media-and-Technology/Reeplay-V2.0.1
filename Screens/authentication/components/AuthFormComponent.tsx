@@ -32,6 +32,7 @@ import {getProfileDetails} from '@/api/profile.api';
 import {useAppDispatch} from '@/Hooks/reduxHook';
 import {setCredentials} from '@/store/slices/userSlice';
 import {hasUserDetails} from '@/Screens/Splashscreen/Splashscreen';
+import {HAS_SET_NEWPIN} from '../GetStartedScreen';
 
 const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const HAS_SKIPPED = 'SKIPPED';
@@ -97,14 +98,18 @@ const AuthFormComponent = ({
           if (res.ok && res.data) {
             //dispatch to redux
             await storeData('AUTH_TOKEN', res.data.data.token);
-            const profileRes = await getProfileDetails(res.data.data.token);
-            console.log(profileRes);
+            const profileRes = await getProfileDetails();
             if (profileRes.ok && profileRes.data) {
               await storeData(
                 hasUserDetails,
                 JSON.stringify(profileRes.data.data),
               );
               await storeData('LOGINS', JSON.stringify(password));
+              if (profileRes.data.data.profile.pin)
+                await storeData(
+                  HAS_SET_NEWPIN,
+                  profileRes.data.data.profile.pin,
+                );
               dispatch(setCredentials(profileRes.data.data));
               reset({
                 index: 0,

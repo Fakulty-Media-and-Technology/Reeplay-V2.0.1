@@ -4,7 +4,7 @@ import {IProfileResponse} from '@/types/api/profile.types';
 import {BASE_URL} from '@env';
 import {ApiResponse, create} from 'apisauce';
 
-const getAuthToken = async (): Promise<string | null> => {
+export const getAuthToken = async (): Promise<string | null> => {
   try {
     const token = await getData('AUTH_TOKEN');
     return token ?? null;
@@ -36,17 +36,14 @@ const apiCall = async <T>(
   return apiFunction(profileApi);
 };
 
-export const getProfileDetails = async (token: string) =>
+export const getProfileDetails = async () =>
   await apiCall<IProfileResponse>(profileApi =>
-    profileApi.get<IProfileResponse>(
-      '/customers/profile/fetch',
-      {},
-      {
-        headers: {
-          'customer-auth': token,
-        },
-      },
-    ),
+    profileApi.get<IProfileResponse>('/customers/profile/fetch'),
+  );
+
+export const updateProfileDetails = async (data: any) =>
+  await apiCall<IGeneric>(profileApi =>
+    profileApi.put<IGeneric>('/customers/profile/edit', data),
   );
 
 export const addinterests = async (data: {interest: string[]}) =>
@@ -56,5 +53,9 @@ export const addinterests = async (data: {interest: string[]}) =>
 
 export const uploadProfile = async (data: FormData) =>
   await apiCall<IGeneric>(profileApi =>
-    profileApi.post('/customers/media/upload-photo', data),
+    profileApi.post('/customers/media/upload-photo', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
   );

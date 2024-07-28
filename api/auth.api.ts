@@ -9,7 +9,27 @@ import {
   IVerifyAcc,
 } from '@/types/api/auth.types';
 import {BASE_URL} from '@env';
-import {create} from 'apisauce';
+import {ApiResponse, create} from 'apisauce';
+import {getAuthToken} from './profile.api';
+
+const createAuthApi = async () => {
+  const token = await getAuthToken();
+  return create({
+    baseURL: BASE_URL,
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'application/json',
+      'customer-auth': token,
+    },
+  });
+};
+
+const apiCall = async <T>(
+  apiFunction: (authApi: ReturnType<typeof create>) => Promise<ApiResponse<T>>,
+): Promise<ApiResponse<T>> => {
+  const authApi = await createAuthApi();
+  return apiFunction(authApi);
+};
 
 const baseApi = create({
   baseURL: BASE_URL,
@@ -47,9 +67,7 @@ export const resendVerificationToken = async (data: {
 export const resetPassword = async (data: IResetPasswordData) =>
   await baseApi.post<IGeneric>(`/customers/pass-reset/change-pass`, data);
 
-export const handleCreatePIN = async (data: ICreatePIN, token: string) =>
-  await baseApi.post<IGeneric>(`/customers/signup/createpin`, data, {
-    headers: {
-      'customer-auth': token,
-    },
-  });
+export const handleCreatePIN = async (data: ICreatePIN) =>
+  await apiCall<IGeneric>(authApi =>
+    authApi.post<IGeneric>(`/customers/signup/createpin`, data),
+  );
