@@ -51,7 +51,7 @@ import InAppBrowser from 'react-native-inappbrowser-reborn';
 export const HAS_LOCK_APP = 'HAS_LOCK_APP';
 
 const SettingScreen = () => {
-  const {navigate} = useNavigation<LanguageScreenNav>();
+  // const {navigate} = useNavigation<LanguageScreenNav>();
   const navigation = useNavigation<SettingScreenNav>();
   const [showModal, setShowModal] = useState<boolean>(false);
   const [modalType, setModelType] = useState<string>('');
@@ -140,7 +140,7 @@ const SettingScreen = () => {
       setModelType('video');
     }
     if (query.includes('help')) handleLink();
-    if (query.includes('language')) navigate(routes.LANGUAGE_SCREEN);
+    if (query.includes('language')) navigation.navigate(routes.LANGUAGE_SCREEN);
     if (query.includes('privacy')) navigation.navigate(routes.PRIVACY_SCREEN);
     if (query.includes('about')) navigation.navigate(routes.ABOUT_SCREEN);
     if (query.includes('notifications'))

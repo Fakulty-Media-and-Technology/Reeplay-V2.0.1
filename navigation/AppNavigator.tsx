@@ -25,6 +25,8 @@ import Search from '@/Screens/Search/Search';
 import GetStartedScreen from '@/Screens/authentication/GetStartedScreen';
 import {useNavigation} from '@react-navigation/native';
 import PaymentSummaryView from '@/Screens/Payments/PaymentSummaryView';
+import LanguageScreen from '@/Screens/Language/LanguageScreen';
+import {LiveEvents} from '@/types/api/live.types';
 
 const RootStack = createNativeStackNavigator();
 
@@ -52,6 +54,7 @@ export type RootStackParamList = {
     contentPrice?: string;
     videoURL: string;
   };
+  [routes.LANGUAGE_SCREEN]: undefined;
   [routes.WATCHLIST_SCREEN]: undefined;
   [routes.CAST_SCREEN]: undefined;
   [routes.DOWNLOAD_SCREEN]: undefined;
@@ -70,6 +73,12 @@ export type RootStackParamList = {
     channelImage?: any;
     vote?: boolean;
     donate?: boolean;
+    live_event_data?: LiveEvents;
+    upcoming?: boolean;
+    title: string;
+    coverImg?: string;
+    isTime?: boolean;
+    _id: string;
   };
   [routes.PAYMENT_SCREEN]: undefined;
 };
@@ -129,6 +138,9 @@ const AppNavigator = ({lockApp}: {lockApp: boolean}): JSX.Element => {
         <RootStack.Screen
           name={routes.FULL_SCREEN_VIDEO}
           component={FullScreenModal}
+          options={{
+            orientation: 'landscape_right',
+          }}
         />
       </RootStack.Group>
 
@@ -168,6 +180,13 @@ const AppNavigator = ({lockApp}: {lockApp: boolean}): JSX.Element => {
         <RootStack.Screen
           name={routes.INTEREST_SCREEN}
           component={InterestScreen}
+        />
+      </RootStack.Group>
+
+      <RootStack.Group>
+        <RootStack.Screen
+          name={routes.LANGUAGE_SCREEN}
+          component={LanguageScreen}
         />
       </RootStack.Group>
 

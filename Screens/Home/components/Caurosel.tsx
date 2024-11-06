@@ -5,8 +5,9 @@ import {
   Animated,
   Platform,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
-import React, {Fragment} from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
 import FastImage from 'react-native-fast-image';
 import {AppButton, AppImage, AppText, AppView} from '@/components';
 import Size from '@/Utils/useResponsiveSize';
@@ -26,13 +27,17 @@ import {
   LiveSlideProps,
   LiveSliderDataProps,
 } from '@/types/data.types';
-import {useNavigation} from '@react-navigation/native';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
 import {HomeScreenNav, TabMainNavigation} from '@/types/typings';
 import routes from '@/navigation/routes';
 import {fullVideoType, previewContentType} from '@/navigation/AppNavigator';
 import LinearGradient from 'react-native-linear-gradient';
 import fonts from '@/configs/fonts';
-import {MovieVideo} from '../HomeScreen';
+import {AnimatedLin, MovieVideo} from '../HomeScreen';
+import {LiveEvents} from '@/types/api/live.types';
+import {checkTimeStatus} from '@/Utils/timeStatus';
+import {getLivestreamWatch, getVOD_Stream} from '@/api/live.api';
+import {FadeIn, FadeOut} from 'react-native-reanimated';
 
 const ITEM_WIDTH = Size.getWidth() * 0.88;
 const WIDTH = Dimensions.get('window').width;
@@ -40,7 +45,7 @@ const WIDTH = Dimensions.get('window').width;
 const SPACING = 6;
 
 interface Props {
-  item: HomeSlideProps | LiveSlideProps;
+  item: HomeSlideProps | LiveEvents;
   translate?: Animated.AnimatedInterpolation<string | number>;
   currentIndex: boolean;
   live?: boolean;
@@ -55,6 +60,44 @@ const Caurosel = ({
   live,
 }: Props) => {
   const {navigate} = useNavigation<TabMainNavigation>();
+  const [videoURL, setVideoURL] = useState<string>('');
+  const [imgLoad, setImgLoad] = useState<boolean>(false);
+  const isFocused = useIsFocused();
+  const isTime = 'start' in item && checkTimeStatus(item.start, item.expiry);
+
+  // console.log(videoURL, '.....video');
+
+  async function getDefaultVideo() {
+    try {
+      if (live && 'preview_video' in item && '_id' in item) {
+        const {key, bucket} = item.preview_video;
+
+        //@ts-ignore
+        // if (!('active' in item.active)) return;
+        const res =
+          isTime === 'normal' || isTime === 'countdown'
+            ? await getVOD_Stream({
+                key,
+                bucket,
+              })
+            : await getLivestreamWatch(item._id);
+
+        if (res.ok && res.data) {
+          setVideoURL(
+            'url' in res.data.data
+              ? res.data.data.url
+              : 'video_content' in res.data.data
+              ? res.data.data.video_content
+              : '',
+          );
+        }
+      }
+    } catch (error) {}
+  }
+
+  useEffect(() => {
+    getDefaultVideo();
+  }, [isFocused]);
 
   return (
     <Animated.View
@@ -84,7 +127,9 @@ const Caurosel = ({
       )}
 
       {live && currentIndex && (
-        <LinearGradient
+        <AnimatedLin
+          entering={FadeIn.duration(150)}
+          exiting={FadeOut.duration(300)}
           colors={['transparent', 'rgba(0, 0, 0, 0.8)', 'rgb(0, 0, 0)']}
           style={[
             {
@@ -97,11 +142,37 @@ const Caurosel = ({
           ]}
         />
       )}
-      <AppImage
-        source={item.image}
-        style={{width: ITEM_WIDTH}}
-        className="absolute h-full rounded-[7px]"
-      />
+
+      {imgLoad && (
+        <AppView className="relative w-full h-full items-center justify-center z-10">
+          <ActivityIndicator size={'large'} color={colors.RED} />
+        </AppView>
+      )}
+
+      {live && 'photo_url' in item ? (
+        <FastImage
+          source={{
+            uri: item.photo_url,
+            priority: FastImage.priority.high,
+            cache: FastImage.cacheControl.immutable,
+          }}
+          onLoadStart={() => setImgLoad(true)}
+          onLoadEnd={() => setImgLoad(false)}
+          style={{
+            width: ITEM_WIDTH,
+            position: 'absolute',
+            height: '100%',
+            borderRadius: 7,
+          }}
+        />
+      ) : (
+        <AppImage
+          //@ts-ignore
+          source={item.image}
+          style={{width: ITEM_WIDTH}}
+          className="absolute h-full rounded-[7px]"
+        />
+      )}
       <AppView className="absolute bottom-4 z-10 items-center">
         <AppText className="text-white text-sm uppercase font-MANROPE_400 mb-3">
           {item.type}
@@ -113,22 +184,24 @@ const Caurosel = ({
           className="text-[40px] leading-[39px] font-LEXEND_700 text-white mb-1 text-center">
           {item.title}
         </AppText>
-        <AppView className="flex-row items-center justify-center">
-          {'tags' in item &&
-            item.tags &&
-            item.tags.map((tag, i) => {
-              return (
-                <Fragment key={i}>
-                  <AppText className="font-ROBOTO_400 text-sm text-grey_200">
-                    {tag}
-                  </AppText>
-                  {item.tags && i !== item.tags.length - 1 && (
-                    <AppView className="w-1.5 h-1.5 rounded-full bg-white mt-[2.5px] mx-1.5" />
-                  )}
-                </Fragment>
-              );
-            })}
-        </AppView>
+        {!live && (
+          <AppView className="flex-row items-center justify-center">
+            {'tags' in item &&
+              item.tags &&
+              item.tags.map((tag, i) => {
+                return (
+                  <Fragment key={i}>
+                    <AppText className="font-ROBOTO_400 text-sm text-grey_200">
+                      {tag}
+                    </AppText>
+                    {item.tags && i !== item.tags.length - 1 && (
+                      <AppView className="w-1.5 h-1.5 rounded-full bg-white mt-[2.5px] mx-1.5" />
+                    )}
+                  </Fragment>
+                );
+              })}
+          </AppView>
+        )}
 
         <AppView className="flex-row items-center justify-center mt-1.5">
           <AppButton
@@ -143,7 +216,8 @@ const Caurosel = ({
             }
             replaceDefaultContent={
               live ? (
-                'subscription' in item && item.subscription === 'premium' ? (
+                //@ts-ignore
+                item.vid_class === 'premium' ? (
                   <PremiumIcon_B />
                 ) : 'subscription' in item &&
                   item.subscription === 'exclusive' ? (
@@ -169,8 +243,13 @@ const Caurosel = ({
             onPress={() =>
               navigate(routes.FULL_SCREEN_VIDEO, {
                 type: live ? fullVideoType.live : fullVideoType.default,
-                videoURL: item.videoURL ? item.videoURL : '',
+                videoURL: videoURL,
                 donate: true,
+                live_event_data: item as any,
+                title: item.title,
+                coverImg: 'photo_url' in item ? item.photo_url : '',
+                isTime: isTime === 'now',
+                _id: '_id' in item ? item._id : '',
               })
             }
             style={{

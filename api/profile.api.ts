@@ -1,13 +1,28 @@
-import {getData} from '@/Utils/useAsyncStorage';
+import {getData, storeData} from '@/Utils/useAsyncStorage';
 import {IGeneric} from '@/types/api/auth.types';
-import {IProfileResponse} from '@/types/api/profile.types';
+import {IProfileResponse, Notification} from '@/types/api/profile.types';
 import {BASE_URL} from '@env';
 import {ApiResponse, create} from 'apisauce';
+import {refreshToken, validateToken} from './auth.api';
 
 export const getAuthToken = async (): Promise<string | null> => {
   try {
+    let validToken = null;
     const token = await getData('AUTH_TOKEN');
-    return token ?? null;
+    const ref_token = await getData('REFRESH_TOKEN');
+
+    const res = await validateToken(token ? token : '');
+    if (res.ok && res.data?.data.valid) {
+      validToken = token;
+    } else {
+      const refresh = await refreshToken(ref_token ? ref_token : '');
+      if (refresh.ok && refresh.data) {
+        validToken = refresh.data.data.accessToken;
+        await storeData('AUTH_TOKEN', validToken);
+      }
+    }
+
+    return validToken ?? null;
   } catch (error) {
     console.error('Failed to fetch AUTH_TOKEN from AsyncStorage', error);
     return null;
@@ -16,6 +31,7 @@ export const getAuthToken = async (): Promise<string | null> => {
 
 const createProfileApi = async () => {
   const token = await getAuthToken();
+  console.log(token);
   return create({
     baseURL: BASE_URL,
     withCredentials: true,
@@ -49,6 +65,11 @@ export const updateProfileDetails = async (data: any) =>
 export const addinterests = async (data: {interest: string[]}) =>
   await apiCall<IGeneric>(profileApi =>
     profileApi.post('/customers/settings/interest/add', data),
+  );
+
+export const setNotifications = async (data: Notification) =>
+  await apiCall<IGeneric>(profileApi =>
+    profileApi.put('/customers/settings/notification-vidquality', data),
   );
 
 export const uploadProfile = async (data: FormData) =>

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1020677113768",
+    "project_id": "reeplay-4a7cd",
+    "storage_bucket": "reeplay-4a7cd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1020677113768:android:e559fd0f0f772180deff9d",
+        "android_client_info": {
+          "package_name": "com.facultymedia.reeplay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBabSVlzMd4FMy3vZ0JDDkuAbrCwtxUv8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1020677113768:android:c5a4b8054de9780bdeff9d",
+        "android_client_info": {
+          "package_name": "com.reeplayv2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBabSVlzMd4FMy3vZ0JDDkuAbrCwtxUv8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -108,32 +108,32 @@ const GetStartedScreen = () => {
     }
   }
 
-  async function backgroundLogin() {
-    const user = await getData(hasUserDetails);
-    const credentials = await getData('LOGINS');
-    if (!user || !credentials) return;
-    try {
-      const email = JSON.parse(user).profile.email;
-      const password = JSON.parse(credentials);
-      const res = await handleLoginAPI({
-        email,
-        password,
-      });
-      console.log(res);
-      if (res.ok && res.data) {
-        //dispatch to redux
-        await storeData('AUTH_TOKEN', res.data.data.token);
-        const profileRes = await getProfileDetails();
-        console.log(profileRes);
-        if (profileRes.ok && profileRes.data) {
-          await storeData(hasUserDetails, JSON.stringify(profileRes.data.data));
-          await storeData('LOGINS', JSON.stringify(password));
-        }
-      } else {
-        setLogin(true);
-      }
-    } catch (error) {}
-  }
+  // async function backgroundLogin() {
+  //   const user = await getData(hasUserDetails);
+  //   const credentials = await getData('LOGINS');
+  //   if (!user || !credentials) return;
+  //   try {
+  //     const email = JSON.parse(user).profile.email;
+  //     const password = JSON.parse(credentials);
+  //     const res = await handleLoginAPI({
+  //       email,
+  //       password,
+  //     });
+  //     console.log(res);
+  //     if (res.ok && res.data) {
+  //       //dispatch to redux
+  //       await storeData('AUTH_TOKEN', res.data.data.token);
+  //       const profileRes = await getProfileDetails();
+  //       console.log(profileRes);
+  //       if (profileRes.ok && profileRes.data) {
+  //         await storeData(hasUserDetails, JSON.stringify(profileRes.data.data));
+  //         await storeData('LOGINS', JSON.stringify(password));
+  //       }
+  //     } else {
+  //       setLogin(true);
+  //     }
+  //   } catch (error) {}
+  // }
 
   async function checkBiometrics() {
     rnBiometrics.isSensorAvailable().then(resultObject => {
@@ -154,7 +154,7 @@ const GetStartedScreen = () => {
   }
 
   useLayoutEffect(() => {
-    backgroundLogin();
+    // backgroundLogin();
     getLockState();
     checkBiometrics();
   }, []);

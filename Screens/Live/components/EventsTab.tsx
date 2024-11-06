@@ -1,33 +1,39 @@
 import {Animated, StyleSheet, View} from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import Swiper from './Swiper';
 import {TrendingNow} from '@/configs/data';
 import Size from '@/Utils/useResponsiveSize';
 import {AppText, AppView} from '@/components';
 import OthersView from './OthersView';
+import {IEvent} from '../DynamicViewContainer';
 
 interface Props {
   scrollY: Animated.Value;
+  item: IEvent;
 }
 
-const EventsTab = ({scrollY}: Props) => {
+const EventsTab = ({scrollY, item}: Props) => {
   return (
     <View>
-      {TrendingNow.length > 0 ? (
+      {item.pop.length > 0 || item.others.length > 0 ? (
         <>
-          <Swiper
-            data={TrendingNow.slice(1)}
-            title="Popular Events"
-            containerStyle={{height: 171, width: Size.getWidth()}}
-            mainStyle={{paddingLeft: 0}}
-            spacing={8}
-            scrollY={scrollY}
-            headerStyle={{marginLeft: 20}}
-          />
+          {item.pop.length > 0 && (
+            <Swiper
+              data={item.pop}
+              title="Popular Events"
+              containerStyle={{height: 171, width: Size.getWidth()}}
+              mainStyle={{paddingLeft: 0}}
+              spacing={8}
+              scrollY={scrollY}
+              headerStyle={{marginLeft: 20}}
+            />
+          )}
 
-          <AppView className="px-5 mt-8 mb-20">
-            <OthersView data={TrendingNow} title="Others in Events" />
-          </AppView>
+          {item.others.length > 0 && (
+            <AppView className="px-5 mt-8 mb-20">
+              <OthersView data={item.others} title="Others in Events" />
+            </AppView>
+          )}
         </>
       ) : (
         <AppText

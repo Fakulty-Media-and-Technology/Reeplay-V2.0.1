@@ -84,8 +84,9 @@ const VerificationScreen = () => {
         console.log(res);
 
         if (res.ok && res.data) {
-          await storeData('AUTH_TOKEN', res.data.data.token);
-          const profileRes = await getProfileDetails(res.data.data.token);
+          await storeData('AUTH_TOKEN', res.data.data.accessToken);
+          await storeData('REFRESH_TOKEN', res.data.data.refreshToken);
+          const profileRes = await getProfileDetails();
           console.log(profileRes);
           if (profileRes.ok && profileRes.data) {
             await storeData(

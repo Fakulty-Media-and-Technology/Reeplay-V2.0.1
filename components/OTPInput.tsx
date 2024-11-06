@@ -67,6 +67,7 @@ const OTPInput = ({pinCount, handleCode, style, space}: OTPInputProps) => {
           ]}
           maxLength={1}
           keyboardType="numeric"
+          inputMode="numeric"
           onChangeText={text => handleTextChange(text, index)}
           value={code[index]}
           onKeyPress={({nativeEvent}) => {

@@ -119,3 +119,7 @@ export {default as CommentSendBtn} from './CommentSendBtn';
 export {default as InfoLiveBtn} from './InfoLiveBtn';
 export {default as EyeIcon_C} from './EyeIcon_C';
 export {default as SearchInput} from './SearchInput';
+export {default as WalletIcon} from './WalletIcon';
+export {default as NewCardIcon} from './NewCardIcon';
+export {default as CardIcon} from './CardIcon';
+export {default as LockModalIcon} from './LockModal';

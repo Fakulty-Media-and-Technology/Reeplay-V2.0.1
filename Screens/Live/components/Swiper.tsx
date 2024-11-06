@@ -29,6 +29,7 @@ import {
   Exclusive,
   FreeIcon,
   FullscreenIcon,
+  InfoLiveBtn,
   MutedIcon,
   PremiumIcon,
   VolumeIcon,
@@ -45,12 +46,16 @@ import routes from '@/navigation/routes';
 import {TabMainNavigation} from '@/types/typings';
 import {useNavigation} from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
+import {LiveEvents} from '@/types/api/live.types';
+import {getLivestreamWatch, getVOD_Stream} from '@/api/live.api';
+import {checkTimeStatus} from '@/Utils/timeStatus';
+import {useCountdownTimer} from '@/Hooks/useCountdown';
 
 interface SwiperPros extends headerProps {
   channels?: boolean;
   containerStyle?: ViewStyle;
   mainStyle?: ViewStyle;
-  data: any[];
+  data: LiveEvents[];
   spacing?: number;
   scrollY: Animated.Value;
 }
@@ -66,37 +71,15 @@ const Swiper = ({
   scrollY,
   mainStyle,
 }: SwiperPros) => {
-  const navigation = useNavigation<TabMainNavigation>();
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [playingIndexes, setPlayingIndexes] = useState<number[]>([]);
-  const [muteVideo, setMuteVideo] = useToggle(false);
   const videoRefs = useRef<Record<number, VideoRef | null>>({});
   const [verticalScrollState, setVerticalScrollState] = useState<number | null>(
     null,
   );
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isBuffering, setIsBuffering] = useState(false);
-  const [isBufferingLoad, setIsBufferingLoad] = useState(false);
 
   const tvShow = title === 'Top TV Shows';
   const event = title === 'Popular Events';
-
-  const onLoad = (data: OnLoadData) => {
-    setIsLoading(false);
-  };
-
-  const onLoadStart = () => setIsLoading(true);
-
-  const onBuffer = ({isBuffering}: {isBuffering: boolean}) => {
-    setIsBuffering(isBuffering);
-    if (isBuffering) {
-      setIsBufferingLoad(true);
-    }
-  };
-
-  const onReadyForDisplay = () => {
-    setIsBufferingLoad(false);
-  };
 
   function handlePlayVideo(query: number) {
     if (playingIndexes.includes(query)) {
@@ -150,149 +133,18 @@ const Swiper = ({
           paginationStyle={styles.center}
           contentContainerStyle={{marginTop: 13}}
           data={data}
-          renderItem={({item, index}) => {
-            const isPlaying = playingIndexes.includes(index);
+          renderItem={({item, index}: {item: LiveEvents; index: number}) => {
             return (
-              <AppView
-                style={containerStyle}
-                key={index}
-                className="relative rounded-[5px] overflow-hidden items-center mb-3 justify-center">
-                {!isPlaying && (
-                  <TouchableOpacity
-                    onPress={() => handlePlayVideo(index)}
-                    className="absolute z-20">
-                    <BigPlayIcon />
-                  </TouchableOpacity>
-                )}
-
-                <LinearGradient
-                  colors={['transparent', 'rgba(0, 0, 0, 0.7)']}
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    height: 70,
-                    width: '100%',
-                    zIndex: 20,
-                  }}
-                />
-                {isPlaying && (
-                  <>
-                    <AppView className="absolute w-[303px] bottom-[14px] mb-1 px-2 flex-row items-center justify-between z-30">
-                      <AppView className="flex-row items-center gap-x-4">
-                        <AppView className="flex-row items-center gap-x-1">
-                          <MotiView
-                            from={{opacity: 0}}
-                            animate={{opacity: 1}}
-                            transition={{
-                              type: 'timing',
-                              duration: 1500,
-                              easing: Easing.out(Easing.ease),
-                              delay: index * 300,
-                              loop: true,
-                            }}>
-                            <AppView className="w-[7px] h-[7px] rounded-full bg-red" />
-                          </MotiView>
-                          <AppText className="font-ROBOTO_500 text-[10px] text-white">
-                            LIVE
-                          </AppText>
-                        </AppView>
-
-                        <TouchableOpacity
-                          style={{height: 17}}
-                          onPress={setMuteVideo}>
-                          {muteVideo ? (
-                            <AppView className="mt-[3px]">
-                              <MutedIcon />
-                            </AppView>
-                          ) : (
-                            <VolumeIcon />
-                          )}
-                        </TouchableOpacity>
-                      </AppView>
-                      <TouchableOpacity
-                        onPress={() =>
-                          navigation.navigate(routes.FULL_SCREEN_VIDEO, {
-                            type: fullVideoType.live,
-                            videoURL: item.video,
-                            vote: tvShow,
-                            donate: event,
-                          })
-                        }>
-                        <FullscreenIcon />
-                      </TouchableOpacity>
-                    </AppView>
-                  </>
-                )}
-
-                {!isPlaying && (
-                  <>
-                    <AppImage
-                      className="absolute top-0 bottom-0 z-10"
-                      style={[styles.image, {height: 171}]}
-                      source={item.image}
-                    />
-                    <AppView className="w-[303px] px-2 absolute bottom-1.5 flex-row items-center justify-between z-30">
-                      <AppView>
-                        <AppText
-                          style={[
-                            styles.title,
-                            {
-                              fontSize: Size.calcHeight(10.5),
-                            },
-                          ]}>
-                          {item.title}
-                        </AppText>
-                        <AppText style={styles.title}>{item.author}</AppText>
-                      </AppView>
-                      <AppView className="flex-row items-center gap-x-1">
-                        <AppText className="font-ROBOTO_500 text-[11px] text-white mr-[2px]">
-                          {item.viewersDiscretion}
-                        </AppText>
-                        <AppView className="bg-[#626161] rounded-sm pl-1.5 pr-1 pt-[1px] pb-[2.5px]">
-                          <AppText className="font-ROBOTO_500 text-[10px] text-white">
-                            start in{' '}
-                            <AppText className="font-ROBOTO_700 text-[10px] text-red">
-                              01:20:01
-                            </AppText>
-                          </AppText>
-                        </AppView>
-                      </AppView>
-                    </AppView>
-
-                    <AppView className="w-[303px] absolute top-0 z-30">
-                      <AppView className="mt-2 ml-3">
-                        {item.subscription === 'premium' ? (
-                          <PremiumIcon width={20} height={20} />
-                        ) : item.subscription === 'exclusive' ? (
-                          <Exclusive width={20} height={20} />
-                        ) : (
-                          <FreeIcon width={20} height={20} />
-                        )}
-                      </AppView>
-                    </AppView>
-                  </>
-                )}
-                <AppVideo
-                  source={{uri: item.video}}
-                  videoRef={(ref: VideoRef | null) => {
-                    videoRefs.current[index] = ref;
-                  }}
-                  style={{
-                    width: 303,
-                    height: 161,
-                    borderRadius: 5,
-                    alignSelf: 'center',
-                  }}
-                  resizeMode="cover"
-                  muted={muteVideo}
-                  repeat
-                  paused={!isPlaying}
-                  onLoad={onLoad}
-                  onLoadStart={onLoadStart}
-                  onBuffer={onBuffer}
-                  onReadyForDisplay={onReadyForDisplay}
-                />
-              </AppView>
+              <NonChannelComp
+                item={item}
+                index={index}
+                playingIndexes={playingIndexes}
+                videoRefs={videoRefs}
+                tvShow={tvShow}
+                event={event}
+                handlePlayVideo={handlePlayVideo}
+                containerStyle={containerStyle}
+              />
             );
           }}
         />
@@ -315,119 +167,17 @@ const Swiper = ({
             }}
             onMomentumScrollBegin={() => setPlayingIndexes([])}
             renderItem={({item, index}) => {
-              const isPlaying = playingIndexes.includes(index);
               return (
-                <AppView
-                  style={containerStyle}
-                  key={index}
-                  className="relative rounded-[5px] overflow-hidden items-center justify-center">
-                  {!isPlaying ? (
-                    <TouchableOpacity
-                      onPress={() => handlePlayVideo(index)}
-                      className="absolute z-20">
-                      <BigPlayIcon />
-                    </TouchableOpacity>
-                  ) : (
-                    <>
-                      {isBufferingLoad ||
-                        (isLoading && (
-                          <AppView className="absolute z-20 pb-3">
-                            <LottieView
-                              source={require('@/assets/icons/RPlay.json')}
-                              style={{
-                                width: 300,
-                                height: 300,
-                              }}
-                              autoPlay
-                              loop
-                            />
-                          </AppView>
-                        ))}
-                    </>
-                  )}
-
-                  {isPlaying && (
-                    <>
-                      <LinearGradient
-                        colors={['transparent', '#000000']}
-                        style={{
-                          position: 'absolute',
-                          bottom: 0,
-                          height: 70,
-                          width: '100%',
-                          zIndex: 20,
-                        }}
-                      />
-                      <AppView className="absolute w-full bottom-[14px] mb-1 px-2 flex-row items-center justify-between z-30">
-                        <AppView className="flex-row items-center gap-x-4">
-                          <AppView className="flex-row items-center gap-x-1">
-                            <MotiView
-                              from={{opacity: 0}}
-                              animate={{opacity: 1}}
-                              transition={{
-                                type: 'timing',
-                                duration: 1500,
-                                easing: Easing.out(Easing.ease),
-                                delay: index * 300,
-                                loop: true,
-                              }}>
-                              <AppView className="w-[7px] h-[7px] rounded-full bg-red" />
-                            </MotiView>
-                            <AppText className="font-ROBOTO_500 text-[10px] text-white">
-                              LIVE
-                            </AppText>
-                          </AppView>
-
-                          <TouchableOpacity
-                            style={{height: 17}}
-                            onPress={setMuteVideo}>
-                            {muteVideo ? (
-                              <AppView className="mt-[3px]">
-                                <MutedIcon />
-                              </AppView>
-                            ) : (
-                              <VolumeIcon />
-                            )}
-                          </TouchableOpacity>
-                        </AppView>
-                        <TouchableOpacity
-                          onPress={() =>
-                            navigation.navigate(routes.FULL_SCREEN_VIDEO, {
-                              type: fullVideoType.live,
-                              videoURL: item.video,
-                              channelImage: item.image,
-                            })
-                          }>
-                          <FullscreenIcon />
-                        </TouchableOpacity>
-                      </AppView>
-                    </>
-                  )}
-
-                  {!isPlaying && (
-                    <AppImage
-                      className="absolute rounded-[5px] top-0 bottom-0 z-10"
-                      style={styles.image}
-                      source={item.image}
-                    />
-                  )}
-
-                  <AppVideo
-                    source={{uri: item.video}}
-                    videoRef={(ref: VideoRef | null) => {
-                      videoRefs.current[index] = ref;
-                    }}
-                    style={{width: 303, height: 161, borderRadius: 5}}
-                    resizeMode="cover"
-                    muted={muteVideo}
-                    repeat
-                    paused={!isPlaying}
-                    onLoad={onLoad}
-                    onLoadStart={onLoadStart}
-                    onBuffer={onBuffer}
-                    onReadyForDisplay={onReadyForDisplay}
-                  />
-                </AppView>
+                <ChannelComp
+                  index={index}
+                  item={item}
+                  handlePlayVideo={handlePlayVideo}
+                  event={event}
+                  playingIndexes={playingIndexes}
+                  containerStyle={containerStyle}
+                  videoRefs={videoRefs}
+                  tvShow={tvShow}
+                />
               );
             }}
           />
@@ -449,6 +199,462 @@ const Swiper = ({
 };
 
 export default Swiper;
+
+interface NonChannelCompprops {
+  playingIndexes: number[];
+  index: number;
+  handlePlayVideo(query: number): void;
+  item: LiveEvents;
+  videoRefs: React.MutableRefObject<Record<number, VideoRef | null>>;
+  containerStyle?: ViewStyle;
+  event: boolean;
+  tvShow: boolean;
+}
+
+export const NonChannelComp = ({
+  playingIndexes,
+  item,
+  tvShow,
+  event,
+  containerStyle,
+  videoRefs,
+  handlePlayVideo,
+  index,
+}: NonChannelCompprops) => {
+  const navigation = useNavigation<TabMainNavigation>();
+  const isPlaying = playingIndexes.includes(index);
+  const [muteVideo, setMuteVideo] = useToggle(false);
+  const [videoURL, setVideoURL] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [isBufferingLoad, setIsBufferingLoad] = useState(false);
+  const isTime = checkTimeStatus(item.start, item.expiry);
+  const dateObj = new Date(item.start);
+  const countDown = useCountdownTimer(item.start);
+
+  const dateM = dateObj.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short', // Use 'short' for abbreviated month name
+    year: 'numeric',
+  });
+  const parts = dateM.split(' ');
+  const date = `${parts[0]} ${parts[1]}. ${parts[2]}`;
+
+  const time = dateObj.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  async function handleVideo() {
+    try {
+      const {key, bucket} = item.preview_video;
+
+      const res =
+        isTime === 'normal' || isTime === 'countdown'
+          ? await getVOD_Stream({
+              key,
+              bucket,
+            })
+          : await getLivestreamWatch(item._id);
+
+      if (res.ok && res.data) {
+        setVideoURL(
+          'url' in res.data.data
+            ? res.data.data.url
+            : 'video_content' in res.data.data
+            ? res.data.data.video_content
+            : '',
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const onLoad = (data: OnLoadData) => {
+    setIsLoading(false);
+  };
+
+  const onLoadStart = () => setIsLoading(true);
+
+  const onBuffer = ({isBuffering}: {isBuffering: boolean}) => {
+    setIsBuffering(isBuffering);
+    if (isBuffering) {
+      setIsBufferingLoad(true);
+    }
+  };
+
+  const onReadyForDisplay = () => {
+    setIsBufferingLoad(false);
+  };
+
+  useEffect(() => {
+    handleVideo();
+  }, [item, index]);
+
+  return (
+    <AppView
+      style={containerStyle}
+      key={index}
+      className="relative rounded-[5px] overflow-hidden items-center mb-3 justify-center">
+      {!isPlaying ? (
+        <TouchableOpacity
+          onPress={() => handlePlayVideo(index)}
+          className="absolute z-20">
+          <BigPlayIcon />
+        </TouchableOpacity>
+      ) : (
+        <>
+          {(isBufferingLoad || isLoading) && (
+            <AppView className="absolute z-20 pb-3">
+              <LottieView
+                source={require('@/assets/icons/RPlay.json')}
+                style={{
+                  width: 200,
+                  height: 200,
+                }}
+                autoPlay
+                loop
+              />
+            </AppView>
+          )}
+        </>
+      )}
+
+      <LinearGradient
+        colors={['transparent', 'rgba(0, 0, 0, 0.7)']}
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          height: 70,
+          width: '100%',
+          zIndex: 20,
+        }}
+      />
+      {isPlaying && (
+        <>
+          <AppView className="absolute w-[303px] bottom-[14px] mb-1 px-2 flex-row items-center justify-between z-30">
+            <AppView className="flex-row items-center gap-x-4">
+              {isTime === 'now' && (
+                <AppView className="flex-row items-center gap-x-1">
+                  <MotiView
+                    from={{opacity: 0}}
+                    animate={{opacity: 1}}
+                    transition={{
+                      type: 'timing',
+                      duration: 1500,
+                      easing: Easing.out(Easing.ease),
+                      delay: index * 300,
+                      loop: true,
+                    }}>
+                    <AppView className="w-[7px] h-[7px] rounded-full bg-red" />
+                  </MotiView>
+                  <AppText className="font-ROBOTO_500 text-[10px] text-white">
+                    LIVE
+                  </AppText>
+                </AppView>
+              )}
+
+              <TouchableOpacity style={{height: 17}} onPress={setMuteVideo}>
+                {muteVideo ? (
+                  <AppView className="">
+                    <MutedIcon />
+                  </AppView>
+                ) : (
+                  <VolumeIcon />
+                )}
+              </TouchableOpacity>
+            </AppView>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate(routes.FULL_SCREEN_VIDEO, {
+                  type: fullVideoType.live,
+                  videoURL: videoURL,
+                  vote: tvShow,
+                  donate: event,
+                  coverImg: item.photo_url,
+                  _id: item._id,
+                  title: item.title,
+                  isTime: isTime === 'now',
+                })
+              }>
+              <FullscreenIcon />
+            </TouchableOpacity>
+          </AppView>
+        </>
+      )}
+
+      {!isPlaying && (
+        <>
+          <AppImage
+            className="absolute top-0 bottom-0 z-10"
+            style={[styles.image, {height: 171}]}
+            source={{uri: item.photo_url}}
+          />
+          <AppView className="w-[303px] px-2 absolute bottom-1.5 flex-row items-center justify-between z-30">
+            <AppView>
+              <AppText
+                style={[
+                  styles.title,
+                  {
+                    fontSize: Size.calcHeight(10.5),
+                  },
+                ]}>
+                {item.location}
+              </AppText>
+              <AppText style={styles.title}>{item.title}</AppText>
+            </AppView>
+            <AppView className="flex-row items-center gap-x-1">
+              <AppText className="font-ROBOTO_500 text-[11px] text-white mr-[2px]">
+                {item.pg}+
+              </AppText>
+              {isTime === 'now' ? (
+                <InfoLiveBtn />
+              ) : (
+                <AppView className="bg-[#626161] rounded-sm pl-1.5 pr-1 pt-[1px] pb-[2.5px]">
+                  <AppText className="font-ROBOTO_500 text-[10px] text-white">
+                    {isTime === 'normal' ? time : 'start in'}
+                    {'  '}
+                    <AppText
+                      style={{
+                        color:
+                          isTime === 'countdown'
+                            ? 'white'
+                            : item.vid_class === 'premium'
+                            ? colors.YELLOW_500
+                            : item.vid_class === 'exclusive'
+                            ? colors.RED
+                            : colors.green,
+                      }}
+                      className="font-ROBOTO_700 text-[10px]">
+                      {isTime === 'countdown' ? countDown : date}
+                    </AppText>
+                  </AppText>
+                </AppView>
+              )}
+            </AppView>
+          </AppView>
+
+          <AppView className="w-[303px] absolute top-0 z-30">
+            <AppView className="mt-2 ml-3">
+              {item.vid_class === 'premium' ? (
+                <PremiumIcon width={20} height={20} />
+              ) : item.vid_class === 'exclusive' ? (
+                <Exclusive width={20} height={20} />
+              ) : (
+                <FreeIcon width={20} height={20} />
+              )}
+            </AppView>
+          </AppView>
+        </>
+      )}
+      <AppVideo
+        source={{uri: videoURL}}
+        videoRef={(ref: VideoRef | null) => {
+          videoRefs.current[index] = ref;
+        }}
+        style={{
+          width: 303,
+          height: 161,
+          borderRadius: 5,
+          alignSelf: 'center',
+        }}
+        resizeMode="cover"
+        muted={muteVideo}
+        repeat
+        paused={!isPlaying}
+        onLoad={onLoad}
+        onLoadStart={onLoadStart}
+        onBuffer={onBuffer}
+        onReadyForDisplay={onReadyForDisplay}
+      />
+    </AppView>
+  );
+};
+
+export const ChannelComp = ({
+  containerStyle,
+  index,
+  videoRefs,
+  item,
+  handlePlayVideo,
+  playingIndexes,
+}: NonChannelCompprops) => {
+  const navigation = useNavigation<TabMainNavigation>();
+  const isPlaying = playingIndexes.includes(index);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [isBufferingLoad, setIsBufferingLoad] = useState(false);
+  const [muteVideo, setMuteVideo] = useToggle(false);
+  const [videoURL, setVideoURL] = useState<string>('');
+  const isTime = checkTimeStatus(item.start, item.expiry);
+
+  async function handleVideo() {
+    try {
+      const {key, bucket} = item.preview_video;
+
+      const res =
+        isTime === 'normal' || isTime === 'countdown'
+          ? await getVOD_Stream({
+              key,
+              bucket,
+            })
+          : await getLivestreamWatch(item._id);
+
+      if (res.ok && res.data) {
+        setVideoURL(
+          'url' in res.data.data
+            ? res.data.data.url
+            : 'video_content' in res.data.data
+            ? res.data.data.video_content
+            : '',
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const onLoad = (data: OnLoadData) => {
+    setIsLoading(false);
+  };
+
+  const onLoadStart = () => setIsLoading(true);
+
+  const onBuffer = ({isBuffering}: {isBuffering: boolean}) => {
+    setIsBuffering(isBuffering);
+    if (isBuffering) {
+      setIsBufferingLoad(true);
+    }
+  };
+
+  const onReadyForDisplay = () => {
+    setIsBufferingLoad(false);
+  };
+
+  useEffect(() => {
+    handleVideo();
+  }, [item, index]);
+
+  return (
+    <AppView
+      style={containerStyle}
+      key={index}
+      className="relative rounded-[5px] overflow-hidden items-center justify-center">
+      {!isPlaying ? (
+        <TouchableOpacity
+          onPress={() => handlePlayVideo(index)}
+          className="absolute z-20">
+          <BigPlayIcon />
+        </TouchableOpacity>
+      ) : (
+        <>
+          {isBufferingLoad ||
+            (isLoading && (
+              <AppView className="absolute z-20 pb-3">
+                <LottieView
+                  source={require('@/assets/icons/RPlay.json')}
+                  style={{
+                    width: 300,
+                    height: 300,
+                  }}
+                  autoPlay
+                  loop
+                />
+              </AppView>
+            ))}
+        </>
+      )}
+
+      {isPlaying && (
+        <>
+          <LinearGradient
+            colors={['transparent', '#000000']}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              height: 70,
+              width: '100%',
+              zIndex: 20,
+            }}
+          />
+          <AppView className="absolute w-full bottom-[14px] mb-1 px-2 flex-row items-center justify-between z-30">
+            <AppView className="flex-row items-center gap-x-4">
+              <AppView className="flex-row items-center gap-x-1">
+                {isTime === 'now' && (
+                  <MotiView
+                    from={{opacity: 0}}
+                    animate={{opacity: 1}}
+                    transition={{
+                      type: 'timing',
+                      duration: 1500,
+                      easing: Easing.out(Easing.ease),
+                      delay: index * 300,
+                      loop: true,
+                    }}>
+                    <AppView className="w-[7px] h-[7px] rounded-full bg-red" />
+                  </MotiView>
+                )}
+                <AppText className="font-ROBOTO_500 text-[10px] text-white">
+                  LIVE
+                </AppText>
+              </AppView>
+
+              <TouchableOpacity style={{height: 17}} onPress={setMuteVideo}>
+                {muteVideo ? (
+                  <AppView className="mt-[3px]">
+                    <MutedIcon />
+                  </AppView>
+                ) : (
+                  <VolumeIcon />
+                )}
+              </TouchableOpacity>
+            </AppView>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate(routes.FULL_SCREEN_VIDEO, {
+                  type: fullVideoType.live,
+                  videoURL: videoURL,
+                  channelImage: item.photo_url,
+                  title: item.title,
+                  _id: item._id,
+                  isTime: isTime === 'now',
+                  coverImg: item.photo_url,
+                })
+              }>
+              <FullscreenIcon />
+            </TouchableOpacity>
+          </AppView>
+        </>
+      )}
+
+      {!isPlaying && (
+        <AppImage
+          className="absolute rounded-[5px] top-0 bottom-0 z-10"
+          style={styles.image}
+          source={{uri: item.photo_url}}
+        />
+      )}
+
+      <AppVideo
+        source={{uri: videoURL}}
+        videoRef={(ref: VideoRef | null) => {
+          videoRefs.current[index] = ref;
+        }}
+        style={{width: 303, height: 161, borderRadius: 5}}
+        resizeMode="cover"
+        muted={muteVideo}
+        repeat
+        paused={!isPlaying}
+        onLoad={onLoad}
+        onLoadStart={onLoadStart}
+        onBuffer={onBuffer}
+        onReadyForDisplay={onReadyForDisplay}
+      />
+    </AppView>
+  );
+};
 
 const styles = StyleSheet.create({
   pagination: {

@@ -5,35 +5,38 @@
  * @format
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import AppNavigator from '@/navigation/AppNavigator';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
-import {Provider} from 'react-redux';
+import { Provider } from 'react-redux';
 import store from '@/store/app.store';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   AppState,
   BackHandler,
+  PermissionsAndroid,
   Platform,
   StatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import {getData, storeData} from './Utils/useAsyncStorage';
-import {addEventListener} from '@react-native-community/netinfo';
+import { getData, storeData } from './Utils/useAsyncStorage';
+import { addEventListener } from '@react-native-community/netinfo';
 import NetInfo from '@react-native-community/netinfo';
 import AppModal from './components/AppModal';
-import {AppText, AppView, TouchableOpacity} from './components';
-import {CloseLogo} from './assets/icons';
+import { AppText, AppView, TouchableOpacity } from './components';
+import { CloseLogo } from './assets/icons';
 import colors from './configs/colors';
 import fonts from './configs/fonts';
 import Size from './Utils/useResponsiveSize';
 import routes from './navigation/routes';
 import Orientation from 'react-native-orientation-locker';
+import { validateReefreshToken } from './api/auth.api';
+import messaging from '@react-native-firebase/messaging';
 
 const LEFT_APP_TIME = 'LEFT_APP_TIME';
 
@@ -44,6 +47,45 @@ function App(): React.JSX.Element {
   const [showNetworkModal, setShowNetworkModal] = useState<boolean>(false);
   const navigationRef = useRef<any>(null);
   const date = new Date(1711214160358);
+
+  const requestUserPermission = async () => {
+    await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+    );
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    return enabled;
+  };
+
+  const getToken = async () => {
+
+    const token = await messaging().getToken();
+    console.log('Token:', token);
+  };
+
+  async function checkToken() {
+    const token = await getData('REFRESH_TOKEN');
+    if (token) {
+      const res = await validateReefreshToken(token);
+      console.log(res);
+      if (!res.ok && !res.data?.data.valid) {
+        navigationRef.current.reset({
+          index: 0,
+          routes: [
+            {
+              name: routes.AUTH,
+              state: {
+                routes: [{ name: routes.LOGIN_SCREEN }],
+              },
+            },
+          ],
+        });
+      }
+    }
+  }
 
   const handleBackButtonPress = () => {
     console.log('checking...');
@@ -74,7 +116,7 @@ function App(): React.JSX.Element {
         setLockApp(true);
         navigationRef.current.reset({
           index: 0,
-          routes: [{name: routes.AUTH}],
+          routes: [{ name: routes.AUTH }],
         });
       } else {
         console.log(
@@ -95,6 +137,20 @@ function App(): React.JSX.Element {
       LEFT_APP_TIME,
       date.setTime(date.getTime() + 10 * 60 * 1000).toString(),
     );
+  }
+
+  async function handleTest() {
+    if (await requestUserPermission()) {
+      getToken();
+
+      messaging()
+        .getInitialNotification()
+        .then(async rm => {
+          if (rm) {
+            console.log('Notification: ', rm.notification);
+          }
+        });
+    }
   }
 
   useEffect(() => {
@@ -131,6 +187,34 @@ function App(): React.JSX.Element {
   }, []);
 
   useEffect(() => {
+    checkToken();
+  }, [navigationRef]);
+
+  useEffect(() => {
+    handleTest();
+  }, []);
+
+  useEffect(() => {
+    // Lock to portrait orientation on component mount
+    Orientation.lockToPortrait();
+
+    // Define the landscape orientation listener function
+    const handleLandscapeOrientation = () => {
+      console.log('Device rotated to landscape');
+      // Additional logic can be added here if needed    Orientation.lockToPortrait();
+      Orientation.lockToPortrait();
+    };
+
+    // Add the listener for landscape orientation
+    Orientation.addDeviceOrientationListener(handleLandscapeOrientation);
+
+    // Cleanup the listener on component unmount
+    return () => {
+      Orientation.removeDeviceOrientationListener(handleLandscapeOrientation);
+    };
+  }, []);
+
+  useEffect(() => {
     const unsubscribe = addEventListener(state => {
       setNetwork(state.isConnected);
       if (state.isConnected) {
@@ -153,7 +237,7 @@ function App(): React.JSX.Element {
   };
   return (
     <Provider store={store}>
-      <GestureHandlerRootView style={{flex: 1, backgroundColor: '#000'}}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000' }}>
         <StatusBar backgroundColor="#000" />
         <NavigationContainer ref={navigationRef} theme={navTheme}>
           <AppNavigator lockApp={lockApp} />
@@ -162,7 +246,7 @@ function App(): React.JSX.Element {
               isModalVisible={showNetworkModal}
               hideLoge
               hideCloseBtn
-              style={{paddingBottom: 0}}
+              style={{ paddingBottom: 0 }}
               replaceDefaultContent={
                 <AppView className="h-full relative">
                   <AppView className="mb-[74px] mt-[60px] items-center">
@@ -174,7 +258,7 @@ function App(): React.JSX.Element {
                   </AppView>
                   <TouchableOpacity
                     onPress={refreshNetwork}
-                    style={{alignSelf: 'center'}}
+                    style={{ alignSelf: 'center' }}
                     className="absolute bottom-6 z-30">
                     <AppText style={styles.secondaryModalButtonText}>
                       Retry

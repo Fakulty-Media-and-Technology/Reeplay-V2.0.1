@@ -31,11 +31,12 @@ import {resendToken, resetPassword} from '@/api/auth.api';
 import {ArrowLeft} from '@/assets/icons';
 import fonts from '@/configs/fonts';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {handleValidation} from '@/Utils/validatePassword';
 
-const hasAtLeast8Characters = /^.{8,}$/;
-const hasAtLeast1UppercaseLetter = /^(?=.*[A-Z]).+$/;
-const hasAtLeast1LowercaseLetter = /^(?=.*[a-z]).+$/;
-const hasAtLeast1Number = /^(?=.*\d).+$/;
+export const hasAtLeast8Characters = /^.{8,}$/;
+export const hasAtLeast1UppercaseLetter = /^(?=.*[A-Z]).+$/;
+export const hasAtLeast1LowercaseLetter = /^(?=.*[a-z]).+$/;
+export const hasAtLeast1Number = /^(?=.*\d).+$/;
 
 const ResetPassword = () => {
   const {navigate} = useNavigation<ResetPasswordScreenProps>();
@@ -240,7 +241,7 @@ const VerifyEmail = ({
           <ArrowLeft />
         </Pressable>
         <AppText className="text-2xl text-white font-LEXEND_700 mt-12 mb-2">
-          Verify Email
+          Reset Password
         </AppText>
         <AppText className="text-base text-white font-MANROPE_400">
           Code sent to {email}
@@ -304,7 +305,7 @@ interface PasswordProps {
 
 export const NewPasswords = ({setStep, otp, email}: PasswordProps) => {
   const {navigate} = useNavigation<ResetPasswordScreenProps>();
-  const [isVerifyModal, setIsVerifyModal] = useState(false);
+  const [isVerifyModal, setIsVerifyModal] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -312,21 +313,8 @@ export const NewPasswords = ({setStep, otp, email}: PasswordProps) => {
   const {bottom} = useSafeAreaInsets();
   const [msg, setMsg] = useState<string>('');
 
-  function handleValidation() {
-    if (!hasAtLeast8Characters.test(password))
-      return 'Password must be at least 8 characters';
-    else if (!hasAtLeast1UppercaseLetter.test(password))
-      return 'Password must contain uppercase';
-    else if (!hasAtLeast1LowercaseLetter.test(password))
-      return 'Password must contain lowercase';
-    else if (!hasAtLeast1Number.test(password))
-      return 'Password must contain a number';
-    else if (password !== cpassword) return 'Password does not match';
-    else return '';
-  }
-
   async function handleResetPassword() {
-    const check = handleValidation();
+    const check = handleValidation(password, cpassword);
     setError(check);
     setTimeout(() => {
       setError('');

@@ -628,29 +628,6 @@ export const SeriesEpisodesData = [
   },
 ];
 
-export const plans = [
-  {
-    _id: 1,
-    price: '₦500 / month',
-    desc: 'Equals $1 in all users currency',
-  },
-  {
-    _id: 2,
-    price: '₦1,350 / 3 months',
-    desc: 'Save 10%  off three months',
-  },
-  {
-    _id: 3,
-    price: '₦2,640 / 6 months',
-    desc: 'Save 12%  off six  months',
-  },
-  {
-    _id: 4,
-    price: '₦5,160 / year',
-    desc: 'Save 14%  off one year',
-  },
-];
-
 export const paymentMethods = [
   'VISA | MASTERCARD | VERVE',
   'APPLE PAY',

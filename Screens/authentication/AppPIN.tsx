@@ -11,6 +11,7 @@ import colors from '@/configs/colors';
 import Size from '@/Utils/useResponsiveSize';
 import {getData} from '@/Utils/useAsyncStorage';
 import {HAS_SET_NEWPIN} from './GetStartedScreen';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const AppPIN = () => {
   const {reset} = useNavigation<AuthMainNavigation>();
@@ -18,6 +19,7 @@ const AppPIN = () => {
   const [appPin, setAppPin] = useState('');
   const [error, setError] = useState<boolean>(false);
   const user = useAppSelector(selectUser);
+  const {top, bottom} = useSafeAreaInsets();
 
   const handlePin = (pin: string) => {
     if (pin.length === 4) {
@@ -51,7 +53,12 @@ const AppPIN = () => {
   }, []);
 
   return (
-    <AppScreen containerStyle={{paddingTop: 15, position: 'relative'}}>
+    <AppView
+      className="bg-black w-full h-full px-6"
+      style={{
+        paddingTop: top,
+        position: 'relative',
+      }}>
       <AppHeader />
 
       <AppText className="text-2xl text-white font-LEXEND_700 mt-8">
@@ -76,10 +83,10 @@ const AppPIN = () => {
       </AppView>
 
       <Pressable
-        style={{position: 'absolute', bottom: 10, alignSelf: 'center'}}>
+        style={{position: 'absolute', bottom: bottom, alignSelf: 'center'}}>
         <AppText style={styles.forgotText}>Forgot PIN?</AppText>
       </Pressable>
-    </AppScreen>
+    </AppView>
   );
 };
 

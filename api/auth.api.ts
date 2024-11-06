@@ -6,6 +6,7 @@ import {
   IResetPasswordData,
   ISignUpData,
   ISignUpDataResponse,
+  IValideTokenResponse,
   IVerifyAcc,
 } from '@/types/api/auth.types';
 import {BASE_URL} from '@env';
@@ -70,4 +71,19 @@ export const resetPassword = async (data: IResetPasswordData) =>
 export const handleCreatePIN = async (data: ICreatePIN) =>
   await apiCall<IGeneric>(authApi =>
     authApi.post<IGeneric>(`/customers/signup/createpin`, data),
+  );
+
+export const validateToken = async (token: string) =>
+  await baseApi.get<IValideTokenResponse>(
+    `/customers/general/validate-token?token=${token}`,
+  );
+
+export const validateReefreshToken = async (token: string) =>
+  await baseApi.get<IValideTokenResponse>(
+    `/customers/general/validate-reftoken?token=${token}`,
+  );
+
+export const refreshToken = async (token: string) =>
+  await baseApi.get<IValideTokenResponse>(
+    `/customers/general/renew-accesstoken?ref_token=${token}`,
   );

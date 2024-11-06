@@ -3,7 +3,7 @@ import React, {useState} from 'react';
 import {AppHeader, AppImage, AppScreen, AppText, AppView} from '@/components';
 import colors from '@/configs/colors';
 
-const suggestive_Lan = ['English (US)', 'English (UK)'];
+const suggestive_Lan = ['English (US)'];
 
 const LanguageScreen = () => {
   const [activeIndx, setActiveIndx] = useState<number | null>(null);
@@ -46,7 +46,7 @@ const LanguageScreen = () => {
         })}
       </AppView>
       <FlatList
-        data={[...Array(20)]}
+        data={[]}
         keyExtractor={(_, index) => index.toString()}
         showsVerticalScrollIndicator={false}
         renderItem={({item, index}) => {

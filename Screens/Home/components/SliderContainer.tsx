@@ -19,6 +19,8 @@ import Caurosel from './Caurosel';
 import {Rect, Svg} from 'react-native-svg';
 import {HeroSliderDataProps, LiveSliderDataProps} from '@/types/data.types';
 import Carousel from 'react-native-reanimated-carousel';
+import {useAppSelector} from '@/Hooks/reduxHook';
+import {selectSponsoredEvents} from '@/store/slices/liveEvents/sponsoredSlice';
 
 const SLIDER_HEIGHT =
   Platform.OS === 'ios' ? Size.getHeight() * 0.59 : Size.getHeight() * 0.62;
@@ -42,6 +44,7 @@ const Slider = ({data, live}: SliderProps) => {
   const [movieData, setMovieData] = useState([...data, ...data, ...data]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<MyFlatList>(null); // Reference to the FlatList component
+  const sponsoredEvents = useAppSelector(selectSponsoredEvents);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -75,29 +78,6 @@ const Slider = ({data, live}: SliderProps) => {
         colors={['rgb(0,0,0)', 'rgba(0,0,0,0.65)', 'transparent']}
         style={styles.gradientStyles}
       />
-      {/* <LinearGradient
-        colors={
-          Platform.OS === 'android'
-            ? [
-                'transparent',
-                'transparent',
-                'rgba(0,0,0,0.25)',
-                'rgba(0,0,0,0.45)',
-                'rgba(0,0,0,0.85)',
-              ]
-            : [
-                'transparent',
-                'transparent',
-                'rgba(0,0,0,0.25)',
-                'rgba(0,0,0,0.45)',
-                'rgba(0,0,0,0.99)',
-              ]
-        }
-        style={[
-          styles.gradientStyles,
-          {bottom: 0, zIndex: 0, height: SLIDER_HEIGHT},
-        ]}
-      /> */}
 
       {!live && (
         <BackDrop data={[...data]} curIndex={currentIndex} scrollX={scrollX} />
@@ -121,7 +101,7 @@ const Slider = ({data, live}: SliderProps) => {
           }}
           mode="parallax"
           snapEnabled={true}
-          data={[...data]}
+          data={live ? sponsoredEvents : [...data]}
           scrollAnimationDuration={200}
           onSnapToItem={index => {
             console.log('current index:', index);
@@ -141,7 +121,10 @@ const Slider = ({data, live}: SliderProps) => {
           }}
         />
       </View>
-      <Indicators items={[...data]} currentIndex={currentIndex} />
+      <Indicators
+        items={live ? sponsoredEvents : [...data]}
+        currentIndex={currentIndex}
+      />
     </AppView>
   );
 };

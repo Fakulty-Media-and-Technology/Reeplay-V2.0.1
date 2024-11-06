@@ -1,5 +1,5 @@
 import {ScrollView, StyleSheet, Text, View} from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
 import {
   AppHeader,
   AppImage,
@@ -18,12 +18,18 @@ import routes from '@/navigation/routes';
 import {previewContentType} from '@/navigation/AppNavigator';
 import {MovieVideo} from '../Home/HomeScreen';
 
+interface WatchListData {
+  image: string;
+}
+
 const WatchlistScreen = () => {
   const {goBack, navigate} = useNavigation<WatchlistScreenNav>();
+  const [watchList, setWatchList] = useState<WatchListData[]>([]);
+
   return (
     <AppScreen containerStyle={{paddingTop: 10}}>
       <AppHeader style={{zIndex: 99}} />
-      {LibraryData.length === 0 ? (
+      {watchList.length === 0 ? (
         <AppModal
           isModalVisible={true}
           hideLoge
@@ -48,7 +54,7 @@ const WatchlistScreen = () => {
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.centerContent}>
-            {LibraryData.map((lib, index) => {
+            {watchList.map((lib, index) => {
               return (
                 <TouchableOpacity
                   onPress={() =>
@@ -59,7 +65,7 @@ const WatchlistScreen = () => {
                   }
                   activeOpacity={0.6}
                   key={index}>
-                  <AppImage source={lib.image} style={styles.image} />
+                  <AppImage source={{uri: lib.image}} style={styles.image} />
                 </TouchableOpacity>
               );
             })}

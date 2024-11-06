@@ -6,6 +6,8 @@ import {
 } from '@reduxjs/toolkit';
 import userSlice from './slices/userSlice';
 import orientationSlice from './slices/orientationSlize';
+import fullScreenVideoSlice from './slices/fullScreenVideo.slice';
+import sponsoredSlice from './slices/liveEvents/sponsoredSlice';
 
 const middlewares = [
   /* other middlewares */
@@ -14,6 +16,8 @@ const middlewares = [
 const combinedReducer = combineReducers({
   user: userSlice,
   orientation: orientationSlice,
+  fullvideo: fullScreenVideoSlice,
+  sponsoredEvents: sponsoredSlice,
   // ... more reducers
 });
 

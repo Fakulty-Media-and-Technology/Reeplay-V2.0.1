@@ -1,6 +1,6 @@
 import {TouchableOpacity} from '@/components/';
 import useToggle from '@/Hooks/useToggle';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {StyleSheet} from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -29,6 +29,10 @@ const ToggleButton = ({isOn, setIsOn, isBiometrics}: Props) => {
       animation.value = withTiming(0, {duration: 400});
     }
   }
+
+  useEffect(() => {
+    if (isOn) animation.value = withTiming(11.5, {duration: 400});
+  }, []);
 
   return (
     <TouchableOpacity

@@ -32,7 +32,8 @@ export interface ILoginDataResponse extends IGeneric {
 }
 
 export interface LoginData extends User {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface User {
@@ -52,4 +53,11 @@ export interface ICreatePIN {
   email: string;
   pin: string;
   cpin: string;
+}
+
+export interface IValideTokenResponse extends IGeneric {
+  data: {
+    valid: boolean;
+    accessToken: string;
+  };
 }

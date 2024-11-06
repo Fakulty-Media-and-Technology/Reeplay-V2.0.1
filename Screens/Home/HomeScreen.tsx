@@ -1,10 +1,13 @@
 import {
-  Animated,
+  Animated as Ani,
   FlatList,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 import Header from './Header';
@@ -26,7 +29,7 @@ import routes from '@/navigation/routes';
 import BlurView from 'react-native-blur-effect';
 import {BlurView as Blur} from '@react-native-community/blur';
 import {HAS_SKIPPED} from '../authentication/components/AuthFormComponent';
-import {getData} from '@/Utils/useAsyncStorage';
+import {getData, storeData} from '@/Utils/useAsyncStorage';
 import {previewContentType} from '@/navigation/AppNavigator';
 import Orientation, {PORTRAIT} from 'react-native-orientation-locker';
 import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
@@ -34,6 +37,17 @@ import {
   selectOrientation,
   setOrientations,
 } from '@/store/slices/orientationSlize';
+import {getProfileDetails} from '@/api/profile.api';
+import {setCredentials} from '@/store/slices/userSlice';
+import {hasUserDetails} from '../Splashscreen/Splashscreen';
+import {LockModalIcon} from '@/assets/icons';
+import Animated, {FadeIn, FadeInDown} from 'react-native-reanimated';
+import {getSponsoredLiveEvents} from '@/api/live.api';
+import {setSponsoredEventProps} from '@/store/slices/liveEvents/sponsoredSlice';
+import LinearGradient from 'react-native-linear-gradient';
+
+const AnimatedView = Animated.createAnimatedComponent(AppView);
+export const AnimatedLin = Animated.createAnimatedComponent(LinearGradient);
 
 export const SeriesVideo: string =
   'https://res.cloudinary.com/dag4n1g6h/video/upload/f_auto:video,q_auto/video_rhsuqs';
@@ -43,12 +57,13 @@ export const MovieVideo: string =
   'https://res.cloudinary.com/demo/video/upload/f_auto:video,q_auto/tz2nkki28sk5idwthlpk.mp4';
 
 const HomeScreen = () => {
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Ani.Value(0)).current;
   const [isScrolled, setIsScrolled] = useState(0);
   const {navigate} = useNavigation<HomeScreenNav>();
   const {navigate: nav, setOptions} = useNavigation<TabMainNavigation>();
   const dispatch = useAppDispatch();
-  const orientation = useAppSelector(selectOrientation);
+  const [orientation, setOrientation] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   const [isSkipped, setIsSkipped] = useState<boolean>(false);
 
@@ -57,6 +72,22 @@ const HomeScreen = () => {
     if (hasSkipped) {
       setIsSkipped(true);
     }
+  }
+
+  async function userProfile() {
+    const res = await getProfileDetails();
+    if (res.ok && res.data) {
+      dispatch(setCredentials(res.data.data));
+      await storeData(hasUserDetails, JSON.stringify(res.data.data));
+    }
+  }
+
+  // LIVE EVENTS FUNCTIONS
+  async function getSponsoredEvents() {
+    try {
+      const res = await getSponsoredLiveEvents();
+      if (res.ok && res.data) dispatch(setSponsoredEventProps(res.data.data));
+    } catch (error) {}
   }
 
   useEffect(() => {
@@ -74,19 +105,41 @@ const HomeScreen = () => {
     getSkippedState();
   }, []);
 
-  useLayoutEffect(() => {
+  function checkOrientation() {
     Orientation.getOrientation(orient => {
-      console.log('Current UI Orientation: ', orient);
       if (orientation !== orient) dispatch(setOrientations(orient));
-    });
-  }, []);
 
-  useEffect(() => {
-    Orientation.lockToPortrait();
-  });
+      console.log(orientation, orient);
+
+      if (orient !== PORTRAIT) {
+        Orientation.lockToPortrait();
+        checkOrientation();
+      } else {
+        setOrientation(orient);
+      }
+      // dispatch(set(orientation))
+    });
+  }
+
+  useLayoutEffect(() => {
+    checkOrientation();
+    userProfile();
+    getSponsoredEvents();
+  }, []);
 
   return (
     <>
+      <Pressable
+        onPress={() => setShowModal(true)}
+        onPressIn={() => setShowModal(true)}
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'absolute',
+          zIndex: 10,
+        }}
+      />
+
       {orientation === PORTRAIT ? (
         <>
           {/* //Header */}
@@ -116,9 +169,11 @@ const HomeScreen = () => {
             barStyle="light-content"
             backgroundColor="transparent"
           />
+
           {/* HOME SCROLL */}
-          <Animated.ScrollView
-            onScroll={Animated.event(
+          <Ani.ScrollView
+            scrollEnabled={false}
+            onScroll={Ani.event(
               [{nativeEvent: {contentOffset: {y: scrollY}}}],
               {useNativeDriver: false},
             )}
@@ -128,7 +183,10 @@ const HomeScreen = () => {
             // bounces={false}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{paddingBottom: 50, width: '100%'}}
-            style={{backgroundColor: colors.DEEP_BLACK, position: 'relative'}}>
+            style={{
+              backgroundColor: colors.DEEP_BLACK,
+              position: 'relative',
+            }}>
             <Slider data={HeroSliderData} />
 
             <AppView className="mt-8 pl-5">
@@ -201,11 +259,84 @@ const HomeScreen = () => {
             </AppView>
 
             <Sections isSkipped={isSkipped} />
-          </Animated.ScrollView>
+          </Ani.ScrollView>
         </>
       ) : (
         <AppView className="w-full h-full bg-black" />
       )}
+
+      <Modal
+        visible={showModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => console.log('mvp modal')}>
+        <AppView className="relative w-full h-full">
+          {Platform.OS === 'ios' ? (
+            <Blur
+              blurType="dark"
+              blurAmount={2}
+              style={{
+                height: Size.hp(100),
+                width: '100%',
+              }}
+            />
+          ) : (
+            <BlurView backgroundColor="rgba(0, 0, 0, 0.4)" blurRadius={2} />
+          )}
+
+          <AnimatedView
+            entering={FadeIn.duration(2000).springify()}
+            style={{height: Size.hp(60)}}
+            className="mt-auto bg-black/50 pt-3">
+            <AppView
+              style={{alignSelf: 'center'}}
+              className="h-[2px] w-11 bg-[#DEE1E6]"
+            />
+
+            <AppView
+              style={{alignSelf: 'center'}}
+              className="flex-row items-center mt-4">
+              <LockModalIcon />
+              <AppText className="mb-2 font-LEXEND_600 text-white text-lg">
+                Coming Soon
+              </AppText>
+            </AppView>
+
+            <AppText
+              style={{alignSelf: 'center'}}
+              className="font-LEXEND_400 text-white text-xl px-3 mt-3">
+              Reeplay video on demand is accepting contents.
+            </AppText>
+
+            <AppText
+              style={{alignSelf: 'center'}}
+              className="font-MANROPE_400 text-base text-white mt-5 px-2">
+              Reeplay streaming app is currently accepting contents. We will
+              accept only African contents, produced in and out of Africa,
+              produced by any race, provided content is of 70% black cast.
+            </AppText>
+
+            <AppText
+              style={{alignSelf: 'center'}}
+              className="font-MANROPE_400 text-base text-yellow mt-5 px-3">
+              <AppText className="text-white">
+                Reeplay VOD Streaming platform accepts contents as Movies, Tv
+                Series, Documentaries, Anime and More.
+              </AppText>
+              To submit your content for go through any Reeplay licensed
+              publisher.
+            </AppText>
+
+            <TouchableOpacity
+              onPress={() => setShowModal(false)}
+              className="bg-[#626161] rounded-lg py-3 mx-5 mt-auto mb-8">
+              <AppText className="font-MANROPE_400 text-white text-lg mb-[2px] text-center">
+                Close
+              </AppText>
+            </TouchableOpacity>
+          </AnimatedView>
+        </AppView>
+      </Modal>
     </>
   );
 };

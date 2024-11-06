@@ -89,22 +89,23 @@ const AuthFormComponent = ({
       }, 2000);
     } else {
       try {
+        setLoading(true);
         if (regex.test(email)) {
           const res = await handleLoginAPI({
             email,
             password,
           });
-          console.log(res);
+          console.log(res, '.....Login......');
           if (res.ok && res.data) {
             //dispatch to redux
-            await storeData('AUTH_TOKEN', res.data.data.token);
+            await storeData('AUTH_TOKEN', res.data.data.accessToken);
+            await storeData('REFRESH_TOKEN', res.data.data.refreshToken);
             const profileRes = await getProfileDetails();
             if (profileRes.ok && profileRes.data) {
               await storeData(
                 hasUserDetails,
                 JSON.stringify(profileRes.data.data),
               );
-              await storeData('LOGINS', JSON.stringify(password));
               if (profileRes.data.data.profile.pin)
                 await storeData(
                   HAS_SET_NEWPIN,
@@ -134,7 +135,10 @@ const AuthFormComponent = ({
                 userDetails: userData,
               });
             } else {
-              res.data && setError(res.data.message.split(':')[1]);
+              setError(
+                res.data?.message.split(':')[1] ||
+                  'Opps, something weent wrong.',
+              );
               setTimeout(() => {
                 setError('');
               }, 5000);
@@ -225,7 +229,6 @@ const AuthFormComponent = ({
             navSignup.navigate(routes.VEERIFY_PHONE, {
               userDetails: userData,
             });
-            await storeData('LOGINS', JSON.stringify(password));
             setLoading(false);
             resetState();
           } else {

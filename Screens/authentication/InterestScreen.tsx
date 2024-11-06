@@ -1,4 +1,5 @@
 import {
+  Alert,
   Platform,
   Pressable,
   ScrollView,
@@ -20,11 +21,17 @@ import Size from '@/Utils/useResponsiveSize';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {InterestScreenProps, InterestScreenRouteProps} from '@/types/typings';
 import routes from '@/navigation/routes';
-import {addinterests} from '@/api/profile.api';
+import {addinterests, getProfileDetails} from '@/api/profile.api';
+import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
+import {selectUser, setCredentials} from '@/store/slices/userSlice';
 
 const InterestScreen = () => {
+  const user = useAppSelector(selectUser);
+  const dispatch = useAppDispatch();
   const navigation = useNavigation<InterestScreenProps>();
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedItems, setSelectedItems] = useState<string[]>(
+    user.settings_info.interest,
+  );
   const [isMaxReached, setIsMaxReached] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,7 +39,7 @@ const InterestScreen = () => {
   const isSettings = route.params.isSettings;
 
   const isSelected = (title: string) => {
-    return selectedItems.includes(title);
+    return selectedItems.includes(title.toLowerCase());
   };
 
   const removeItem = (title: string) => {
@@ -60,8 +67,13 @@ const InterestScreen = () => {
         //TODO: handle interest endpoint and remove setTimeout
 
         const res = await addinterests({interest: selectedItems});
+
         if (res.ok && res.data) {
           if (isSettings) {
+            Alert.alert('Settings', 'Interest has been added');
+            const userRes = await getProfileDetails();
+            if (userRes.ok && userRes.data)
+              dispatch(setCredentials(userRes.data.data));
             navigation.navigate(routes.SETTINGS_SCREEN);
           } else {
             navigation.reset({
@@ -81,6 +93,8 @@ const InterestScreen = () => {
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -126,7 +140,7 @@ const InterestScreen = () => {
             return (
               <TouchableOpacity
                 key={i}
-                onPress={() => handlePress(interest)}
+                onPress={() => handlePress(interest.toLowerCase())}
                 style={[
                   {paddingHorizontal: interest.length >= 6 ? 22 : 34},
                   isSelected(interest) && {backgroundColor: colors.RED},

@@ -1,5 +1,5 @@
 import {StyleSheet, Text, View} from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   AppButton,
   AppHeader,
@@ -11,31 +11,59 @@ import {
 } from '@/components';
 import colors from '@/configs/colors';
 import Size from '@/Utils/useResponsiveSize';
+import {Contestants} from '@/types/api/live.types';
+import {IUserSubscription} from '@/types/api/subscription.types';
+import {userSubscriptionStatus} from '@/api/subscription.api';
 
 interface Props {
   setStage: React.Dispatch<React.SetStateAction<string>>;
+  selectedContestant: Contestants | null;
+  price: number | undefined;
+  setAmount: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const SelectVotesTab = ({setStage}: Props) => {
+const SelectVotesTab = ({
+  setStage,
+  selectedContestant,
+  price,
+  setAmount,
+}: Props) => {
   const [voteCount, setVoteCount] = useState<number>(0);
+  const [billingService, setBillingService] =
+    useState<IUserSubscription | null>(null);
+
+  // async
+  async function handleSubscriptionStatus() {
+    const res = await userSubscriptionStatus();
+    if (res.ok && res.data && res.data.data) {
+      setBillingService(res.data.data);
+    }
+  }
+
+  useEffect(() => {
+    price && setAmount(price * voteCount);
+  }, [voteCount]);
+
+  useEffect(() => {
+    handleSubscriptionStatus();
+  }, []);
+
   return (
     <AppScreen containerStyle={{paddingTop: 15}}>
       <AppHeader handleFunc={() => setStage('preview')} />
 
       <AppView className="items-center mt-24">
         <AppImage
-          source={require('@/assets/images/bette.png')}
+          source={{uri: selectedContestant?.photo_url}}
           className="w-[160px] h-[160px] rounded-[22px] overflow-hidden"
         />
 
         <AppText className="font-MANROPE_700 text-base text-white text-center mt-9 mb-1">
-          AMY AKPONYOMA | Contestant 14
+          {selectedContestant?.names}
         </AppText>
 
         <AppText className="font-MANROPE_400 text-white text-base text-center mb-5">
-          Good extensive background in performance of corporate banking credit
-          and financial analysis· Experienced in a range of capital market and
-          cash management procedures.
+          {selectedContestant?.bio}
         </AppText>
 
         <AppView className="flex-row items-center justify-center mt-5 mb-4">
@@ -54,9 +82,14 @@ const SelectVotesTab = ({setStage}: Props) => {
           </AppView>
           <TouchableOpacity
             onPress={() =>
-              setVoteCount(voteCount >= 2 ? voteCount : voteCount + 1)
+              setVoteCount(
+                voteCount >= 2 && !billingService ? voteCount : voteCount + 1,
+              )
             }
-            style={{backgroundColor: voteCount >= 2 ? '#626161CF' : colors.RED}}
+            style={{
+              backgroundColor:
+                voteCount >= 2 && !billingService ? '#626161CF' : colors.RED,
+            }}
             className="w-[26px] h-[26px] rounded-full items-center justify-center relative">
             <AppView className="w-[8px] h-[1.5px] bg-white" />
             <AppView className="w-[9px] h-[1.5px] rotate-90 absolute bg-white" />
@@ -71,6 +104,7 @@ const SelectVotesTab = ({setStage}: Props) => {
         <AppButton
           title="Continue"
           bgColor={colors.RED}
+          isDisable={voteCount === 0}
           onPress={() => setStage('paymentSummary')}
           style={{
             width: '95%',

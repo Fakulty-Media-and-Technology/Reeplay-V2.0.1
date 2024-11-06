@@ -176,6 +176,7 @@ export type SettingScreenNav = NativeStackNavigationProp<
 >;
 
 export type PreviewScreenRoute = RouteProp<RootStackParamList, 'PreviewScreen'>;
+export type VoteScreenRoute = RouteProp<DrawerNavigatorProps, 'VoteScreen'>;
 
 export type CombinedStackParamList = RootStackParamList & AuthStackParamList;
 

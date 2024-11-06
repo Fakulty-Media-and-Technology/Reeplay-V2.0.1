@@ -20,9 +20,18 @@ import DownloadModal from '../Preview/components/DownloadModal';
 import useToggle from '@/Hooks/useToggle';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 
+interface Download {
+  _id: number;
+  title: string;
+  image: any;
+  subscription: string;
+  viewersDiscretion: string;
+  size: string;
+}
+
 const DownoadScreen = () => {
   const {navigate} = useNavigation<DownloadScreenNav>();
-  const [data, setData] = useState([...DownloadsData]);
+  const [data, setData] = useState<Download[]>([]);
   const [isDownload, setIsDownload] = useToggle(false);
   const [isDeleteIndex, setIsDeleteIndex] = useState<number>(0);
 

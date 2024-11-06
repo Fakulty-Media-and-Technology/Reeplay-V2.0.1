@@ -73,15 +73,14 @@ const SeekBar = ({
     .onUpdate(event => {
       translateX.value = event.translationX + context.value.x;
       translateX.value = Math.max(-MAX_MIN, Math.min(translateX.value, 0));
-
-      runOnJS(check)(translateX.value);
     })
     .onFinalize(event => {
       translateX.value = event.translationX + context.value.x;
       translateX.value = Math.max(-MAX_MIN, Math.min(translateX.value, 0));
+      runOnJS(check)(translateX.value);
+
       runOnJS(doneSeek)(translateX.value);
     });
-
   const rBottomSheetStyle = useAnimatedStyle(() => {
     return {
       transform: [{translateX: translateX.value}],

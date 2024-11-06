@@ -19,7 +19,12 @@ import VideoRef, {
 } from 'react-native-video';
 import useToggle from '@/Hooks/useToggle';
 import Orientation from 'react-native-orientation-locker';
-import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useIsFocused,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import {
   B_PauseBtn,
   B_PlayBtn,
@@ -49,13 +54,31 @@ import LottieView from 'lottie-react-native';
 import routes from '@/navigation/routes';
 import BlurView from 'react-native-blur-effect';
 import {BlurView as Blur} from '@react-native-community/blur';
+import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
+import {
+  resetFullVideo,
+  selectFullVideoProps,
+  setFullVideoProps,
+} from '@/store/slices/fullScreenVideo.slice';
+import FastImage from 'react-native-fast-image';
 
 const AnimatedLinear = Animated.createAnimatedComponent(LinearGradient);
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const FullScreenModal = () => {
+  const dispatch = useAppDispatch();
+  const fullVideo = useAppSelector(selectFullVideoProps);
   const route = useRoute<FullScreenVideoRoute>();
+  const {
+    type,
+    videoURL,
+    channelImage: channelImg,
+    donate,
+    vote,
+    _id,
+    title,
+  } = fullVideo.videoURL !== '' ? fullVideo : route.params;
   const navigation = useNavigation<FullScreenVideo>();
   const videoRef = useRef<VideoRef>(null);
   const videoRef2 = useRef<VideoRef>(null);
@@ -76,17 +99,30 @@ const FullScreenModal = () => {
   const [seekWidth, setSeekWidth] = useState(Size.getWidth() - 340);
   const [orientation, setOrientation] = useState<string | null>(null);
   const [show, setShow] = useState(false);
+  const [cover, setCover] = useState<boolean>(true);
+  const {upcoming, coverImg, isTime} = route.params;
+  const [key, setKey] = useState(0);
 
-  useLayoutEffect(() => {
-    Orientation.getOrientation(orientation => {
-      console.log('Current UI Orientation: ', orientation);
-      setOrientation(orientation);
-    });
+  useFocusEffect(
+    React.useCallback(() => {
+      // Reset key when the screen is focused, causing re-render
+      setKey(prevKey => prevKey + 1);
+    }, []),
+  );
 
-    setTimeout(() => {
-      setShow(true);
-    }, 1500);
-  });
+  function setVideoProps() {
+    dispatch(
+      setFullVideoProps({
+        type,
+        videoURL,
+        channelImage: channelImg,
+        donate,
+        vote,
+        title,
+        _id,
+      }),
+    );
+  }
 
   const measureView = () => {
     if (myViewRef.current) {
@@ -106,20 +142,13 @@ const FullScreenModal = () => {
     }
   };
 
-  const type = route.params.type;
-  const videoURL = route.params.videoURL;
-  const channelImg = route.params.channelImage;
-  const donate = route.params.donate;
-  const vote = route.params.vote;
-
   const transD = useRef(new Animated.Value(0));
   const transU = useRef(new Animated.Value(0));
   const opacityU = useRef(new Animated.Value(1));
 
   function handle_VOTE_DONATE() {
-    Orientation.lockToPortrait();
     if (donate) {
-      Orientation.lockToPortrait();
+      // Orientation.lockToPortrait();
       navigation.navigate(routes.MAIN, {
         screen: routes.SUBSCRIPTION_SCREEN,
         params: {tab: 'donate'},
@@ -127,12 +156,19 @@ const FullScreenModal = () => {
     }
 
     if (vote) {
-      Orientation.lockToPortrait();
+      // Orientation.lockToPortrait();
+      setIsPlaying(true);
+
       navigation.navigate(routes.MAIN, {
         screen: routes.VOTE_SCREEN,
+        params: {
+          _id,
+        },
       });
     }
   }
+
+  console.log(_id, fullVideo, 'her...............');
 
   const animatedTransform = (
     toValue: number,
@@ -149,6 +185,7 @@ const FullScreenModal = () => {
   const onLoad = (data: OnLoadData) => {
     setDuration(Math.round(data.duration));
     setIsLoading(false);
+    setCover(false);
   };
 
   const onLoadStart = () => setIsLoading(true);
@@ -173,8 +210,11 @@ const FullScreenModal = () => {
   };
 
   const onEnd = () => {
-    setCurrentTime(duration);
+    setCurrentTime(0);
+    videoRef.current?.seek(0);
+    videoRef2.current?.seek(0);
     setIsPlaying(true);
+    setCover(true);
   };
 
   const onSeek = (data: OnSeekData) => {
@@ -202,26 +242,34 @@ const FullScreenModal = () => {
 
   function existFullscreen() {
     Orientation.lockToPortrait();
+
+    dispatch(resetFullVideo());
+
     navigation.setOptions({
       orientation: 'portrait',
     });
     navigation.goBack();
   }
 
-  useLayoutEffect(() => {
-    Orientation.lockToLandscapeLeft();
-    // navigation.setOptions({
-    //   orientation: 'landscape_right',
-    // });
-    Orientation.getOrientation(orientation => {
-      console.log('Current UI Orientation: ', orientation);
-      setOrientation(orientation);
+  function checkOrientation() {
+    // if (!isFocused) return;
+    Orientation.getOrientation(orient => {
+      if (orient === 'PORTRAIT') {
+        Orientation.lockToLandscapeLeft();
+        checkOrientation();
+      } else {
+        setOrientation(orient);
+      }
+      // dispatch(set(orientation))
     });
-  }, []);
+  }
 
-  // useEffect(() => {
-  //   Orientation.lockToLandscapeLeft();
-  // });
+  useEffect(() => {
+    if (isFocused) Orientation.lockToLandscapeLeft();
+    checkOrientation();
+
+    setVideoProps();
+  }, []);
 
   useEffect(() => {
     let loadingTimeout: any;
@@ -320,6 +368,7 @@ const FullScreenModal = () => {
 
   return (
     <>
+      <StatusBar hidden />
       {orientation === 'LANDSCAPE-LEFT' && show ? (
         <View
           style={{
@@ -366,13 +415,17 @@ const FullScreenModal = () => {
             resizeMode="stretch"
             fullscreen
             fullscreenOrientation="landscape"
+            pictureInPicture
             muted={true}
-            // repeat
             paused={true}
           />
 
           {/* Main video component */}
           <View
+            key={key}
+            onLayout={() => {
+              console.log('first layout');
+            }}
             style={{
               position: 'absolute',
               width: Size.getWidth(),
@@ -385,6 +438,24 @@ const FullScreenModal = () => {
                 paddingBottom: 0,
                 backgroundColor: isLoading ? colors.DEEP_BLACK : 'transparent',
               }}>
+              {/* Cover photo */}
+              {cover && (
+                <FastImage
+                  source={{
+                    uri: coverImg,
+                    priority: FastImage.priority.normal,
+                    cache: FastImage.cacheControl.web,
+                  }}
+                  resizeMode={FastImage.resizeMode.cover}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    position: 'absolute',
+                    zIndex: 15,
+                  }}
+                />
+              )}
+
               {!isLoading ? (
                 <>
                   <AnimatedLinear
@@ -470,7 +541,10 @@ const FullScreenModal = () => {
                           height: 70,
                           justifyContent: 'center',
                         }}
-                        onPress={() => setIsPlaying(!isPlaying)}>
+                        onPress={() => [
+                          setIsPlaying(!isPlaying),
+                          setCover(false),
+                        ]}>
                         {isPlaying ? (
                           <B_PlayBtn />
                         ) : (
@@ -503,7 +577,7 @@ const FullScreenModal = () => {
                       )}
 
                       <AppText className="font-ROBOTO_500 text-white text-[11px]">
-                        Video Title
+                        {title || 'Video title'}
                       </AppText>
                     </AppView>
                     <TouchableOpacity onPress={existFullscreen}>
@@ -520,15 +594,17 @@ const FullScreenModal = () => {
                       },
                     ]}>
                     <AppView className="flex-row items-center gap-x-4">
-                      <AppView className="w-[65px] justify-center flex-row items-center gap-x-2">
-                        {type === fullVideoType.live && (
+                      <AppView
+                        style={{width: isTime ? 65 : 50}}
+                        className=" justify-center flex-row items-center gap-x-2">
+                        {type === fullVideoType.live && isTime && (
                           <>
                             <MotiView
                               from={{opacity: 0}}
                               animate={{opacity: 1}}
                               transition={{
                                 type: 'timing',
-                                duration: 500,
+                                duration: 1000,
                                 easing: Easing.out(Easing.ease),
                                 loop: true,
                               }}>
@@ -557,18 +633,20 @@ const FullScreenModal = () => {
                     <AppView className="flex-row items-center">
                       {type !== fullVideoType.live && (
                         <>
-                          <TouchableOpacity
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              marginRight: 16,
-                            }}>
-                            <NextIcon />
-                            <AppText className="ml-[5px] font-ROBOTO_700 text-white text-[10px]">
-                              Next
-                            </AppText>
-                          </TouchableOpacity>
-                          {type === fullVideoType.series && (
+                          {!upcoming && (
+                            <TouchableOpacity
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginRight: 16,
+                              }}>
+                              <NextIcon />
+                              <AppText className="ml-[5px] font-ROBOTO_700 text-white text-[10px]">
+                                Next
+                              </AppText>
+                            </TouchableOpacity>
+                          )}
+                          {type === fullVideoType.series && !upcoming && (
                             <TouchableOpacity
                               style={{
                                 flexDirection: 'row',
@@ -654,15 +732,17 @@ const FullScreenModal = () => {
                         }}
                         className="items-center h-[15px] mx-3 rounded-[5px] overflow-hidden">
                         <AppView className="h-1 w-full bg-grey_white_90 rounded-[5px] mt-1.5">
-                          <SeekBar
-                            duration={duration}
-                            currentTime={currentTime}
-                            setCurrentTime={setCurrentTime}
-                            handleSeek={handleSeek}
-                            setIsPlaying={setIsPlaying}
-                            setFixed={setFixed}
-                            seekWidth={seekWidth - 180}
-                          />
+                          {!isLoading && (
+                            <SeekBar
+                              duration={duration}
+                              currentTime={currentTime}
+                              setCurrentTime={setCurrentTime}
+                              handleSeek={handleSeek}
+                              setIsPlaying={setIsPlaying}
+                              setFixed={setFixed}
+                              seekWidth={seekWidth - 180}
+                            />
+                          )}
                         </AppView>
                       </AppView>
                       <AppText className="text-white text-[13px] font-OUTFIT_500 w-[60px] text-center">

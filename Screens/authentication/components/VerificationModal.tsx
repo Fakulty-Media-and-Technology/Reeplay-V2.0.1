@@ -7,6 +7,7 @@ import {Easing} from 'react-native-reanimated';
 import Size from '@/Utils/useResponsiveSize';
 import fonts from '@/configs/fonts';
 import {AppView} from '@/components';
+import {formatAmount} from '@/Utils/formatAmount';
 
 interface Props {
   reset?: boolean;
@@ -14,6 +15,7 @@ interface Props {
   messageStyle?: TextStyle;
   isPayment?: boolean;
   tab?: string;
+  amount?: number;
 }
 
 const VerificationModal = ({
@@ -22,6 +24,7 @@ const VerificationModal = ({
   isPayment,
   messageStyle,
   tab,
+  amount,
 }: Props) => {
   return (
     <View
@@ -58,7 +61,9 @@ const VerificationModal = ({
 
       {isPayment && (
         <View>
-          <Text style={styles.paymentText}>₦2,640</Text>
+          <Text style={styles.paymentText}>
+            ₦{formatAmount(amount ? amount.toString() : '')}
+          </Text>
           <Text style={styles.paymentText_SM}>
             {tab === 'topup'
               ? 'Top up successful'

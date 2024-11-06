@@ -39,7 +39,12 @@ import {HAS_SKIPPED} from '../authentication/components/AuthFormComponent';
 import {SignUpNavigationProps} from '../authentication/SignUpScreen';
 import {hasUserDetails} from '../Splashscreen/Splashscreen';
 import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
-import {logout, selectUser} from '@/store/slices/userSlice';
+import {
+  logout,
+  selectUser,
+  selectUserProfilePic,
+} from '@/store/slices/userSlice';
+import FastImage from 'react-native-fast-image';
 
 const tabs = [
   'Account',
@@ -68,6 +73,7 @@ const MenuScreen = () => {
   const [isSkipped, setIsSkipped] = useState<boolean>(false);
   const [ads, setAds] = useState<boolean>(false);
   const dispatch = useAppDispatch();
+  const profilePic = useAppSelector(selectUserProfilePic);
 
   async function getSkippedState() {
     const hasSkipped = await getData(HAS_SKIPPED);
@@ -110,10 +116,25 @@ const MenuScreen = () => {
         <AppView className="flex-row items-center justify-between">
           {!isSkipped && (
             <AppView className="flex-row items-center gap-x-3">
-              <AppImage
-                source={require('@/assets/images/bbn.png')}
-                className="w-[40px] h-[40px] rounded-full"
-              />
+              {profilePic === 'no profile picture' ? (
+                <AppImage
+                  source={require('@/assets/images/bbn.png')}
+                  className="w-[64px] h-[64px] rounded-full"
+                />
+              ) : (
+                <FastImage
+                  source={{
+                    uri: profilePic,
+                    priority: FastImage.priority.high,
+                    cache: FastImage.cacheControl.web,
+                  }}
+                  style={{
+                    width: 65,
+                    height: 65,
+                    borderRadius: 99,
+                  }}
+                />
+              )}
               <AppText className="font-MANROPE_700 capitalize text-base text-white">
                 {user.first_name} {user.last_name}
               </AppText>

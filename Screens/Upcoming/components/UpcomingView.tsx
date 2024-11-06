@@ -1,4 +1,4 @@
-import {Animated, StyleSheet, Text, View} from 'react-native';
+import {Alert, Animated as Ani, StyleSheet, Text, View} from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import {
   AppImage,
@@ -23,20 +23,26 @@ import routes from '@/navigation/routes';
 import {useNavigation} from '@react-navigation/native';
 import {TabMainNavigation} from '@/types/typings';
 import LottieView from 'lottie-react-native';
+import {IUpcomingEvents} from '@/types/api/upcomingEvents.types';
+import FastImage from 'react-native-fast-image';
+import {upcomingEventDate} from '@/Utils/formatTime';
+import Size from '@/Utils/useResponsiveSize';
+import {getVOD_Stream} from '@/api/live.api';
+import {
+  getReminderStatus,
+  subscribeReminderStatus,
+  unsubscribeReminderStatus,
+} from '@/api/upcomingEvents.api';
+import Animated, {FadeInLeft} from 'react-native-reanimated';
+
+const AnimatedView = Animated.createAnimatedComponent(AppView);
 
 interface Props {
-  items: {
-    type: string;
-    image: any;
-    video: string;
-    title: string;
-    description: string;
-    releaseDate: string;
-  };
+  items: IUpcomingEvents;
   index: number;
   playingIndexes: number[];
   setPlayingIndexes: React.Dispatch<React.SetStateAction<number[]>>;
-  scrollY: Animated.Value;
+  scrollY: Ani.Value;
 }
 
 const UpcomingView = ({
@@ -50,13 +56,14 @@ const UpcomingView = ({
   const isPlaying = playingIndexes.includes(index);
   const videoRefs = useRef<Record<number, VideoRef | null>>({});
   const [muteVideo, setMuteVideo] = useState(true);
-  const [remindMe, setRemindMe] = useToggle(false);
+  const [remindMe, setRemindMe] = useState<boolean>(false);
   const [verticalScrollState, setVerticalScrollState] = useState<number | null>(
     null,
   );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isBuffering, setIsBuffering] = useState(false);
   const [isBufferingLoad, setIsBufferingLoad] = useState(false);
+  const [videoURL, setVideoURL] = useState<string>('');
 
   const onLoad = (data: OnLoadData) => {
     setIsLoading(false);
@@ -87,6 +94,49 @@ const UpcomingView = ({
     }
   }
 
+  async function handleVideo() {
+    try {
+      const res = await getVOD_Stream({
+        bucket: items.trailer.bucket,
+        key: items.trailer.key,
+      });
+
+      if (res.ok && res.data) {
+        setVideoURL(res.data.data.video_content);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function getSubscribedStatus() {
+    try {
+      const res = await getReminderStatus(items._id);
+      if (res.ok && res.data) {
+        setRemindMe(res.data.data.user_subscribed);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const handleSubscribe = async () => {
+    setRemindMe(!remindMe);
+    try {
+      const res = remindMe
+        ? await unsubscribeReminderStatus(items._id)
+        : await subscribeReminderStatus(items._id);
+      if (res.ok) {
+        getSubscribedStatus();
+      } else {
+        Alert.alert("Opps! couldn't subscribe for the event");
+        setRemindMe(remindMe);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       if (playingIndexes.length === 0) return;
@@ -107,15 +157,36 @@ const UpcomingView = ({
     };
   }, [scrollY, playingIndexes, verticalScrollState]);
 
+  useEffect(() => {
+    handleVideo();
+    getSubscribedStatus();
+  }, []);
+
+  console.log(videoURL);
+
   return (
-    <AppView className="items-center mt-1.5">
-      <AppView className="relative max-w-[400px] h-[186px] items-center justify-center">
+    <AnimatedView
+      entering={FadeInLeft.delay(index * 200).springify()}
+      className="items-center mt-1.5">
+      <AppView className="relative max-w-[400px] h-[196px] items-center justify-center">
         {!isPlaying ? (
           <>
-            <AppImage
-              source={items.image}
-              className="h-[186px] rounded-[20px]"
+            <FastImage
+              source={{
+                uri: items.landscape_photo,
+                priority: FastImage.priority.high,
+                cache: FastImage.cacheControl.web,
+              }}
+              style={{
+                width: Size.wp(92),
+                height: 190,
+                borderRadius: 20,
+              }}
             />
+            {/* <AppImage
+              source={{uri: items.landscape_photo}}
+              className="h-[186px] rounded-[20px]"
+            /> */}
             <TouchableOpacity
               onPress={() => handlePlayVideo(index)}
               style={styles.shadow}
@@ -154,7 +225,7 @@ const UpcomingView = ({
                 zIndex: 20,
               }}
             />
-            <AppView className="absolute w-[90%] bottom-0 mb-1 px-2 flex-row items-center justify-between z-30">
+            <AppView className="absolute w-[90%] bottom-3 mb-1 px-2 flex-row items-center justify-between z-30">
               <TouchableOpacity
                 style={{height: 17, marginBottom: 3}}
                 onPress={() => setMuteVideo(!muteVideo)}>
@@ -173,8 +244,12 @@ const UpcomingView = ({
                       items.type.toLowerCase() === 'series'
                         ? fullVideoType.series
                         : fullVideoType.default,
-                    videoURL: items.video,
+                    videoURL,
                     donate: true,
+                    title: items.title,
+                    upcoming: true,
+                    coverImg: items.landscape_photo,
+                    _id: items._id,
                   })
                 }>
                 <FullscreenIcon />
@@ -185,7 +260,7 @@ const UpcomingView = ({
 
         {isPlaying && (
           <AppVideo
-            source={{uri: items.video}}
+            source={{uri: videoURL}}
             videoRef={(ref: VideoRef | null) => {
               videoRefs.current[index] = ref;
             }}
@@ -218,9 +293,9 @@ const UpcomingView = ({
         </AppView>
         <AppView className="flex-row items-center">
           <AppText className="uppercase mr-2 font-MANROPE_700 text-[10px] text-grey_200">
-            coming {items.releaseDate}
+            coming {upcomingEventDate(items.release_date)}
           </AppText>
-          <TouchableOpacity onPress={setRemindMe}>
+          <TouchableOpacity onPress={handleSubscribe}>
             {remindMe ? <RemindMe /> : <UnRemindMe />}
           </TouchableOpacity>
           <AppText className="text-white ml-1.5 font-MANROPE_400 text-[10px]">
@@ -229,10 +304,10 @@ const UpcomingView = ({
         </AppView>
 
         <AppText className="font-MANROPE_400 text-white text-[13px] text-center max-w-[286px] mt-2">
-          {items.description}
+          {items.details}
         </AppText>
       </AppView>
-    </AppView>
+    </AnimatedView>
   );
 };
 

@@ -22,15 +22,39 @@ import useToggle from '@/Hooks/useToggle';
 import fonts from '@/configs/fonts';
 import colors from '@/configs/colors';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
+import {suggestionApi} from '@/api/external.api';
+import AppModal from '@/components/AppModal';
+import VerificationModal from '../authentication/components/VerificationModal';
 
 const SuggestionScreen = () => {
   const [typed, setTyped] = useToggle();
   const [keyboardStatus, setKeyboardStatus] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [isVerifyModal, setIsVerifyModal] = useState<boolean>(false);
+  const [msg, setMsg] = useState<string>('');
+  const [resMsg, setResMsg] = useState<string>('');
 
   const url = 'https://www.tecno-mobile.com/stores/';
 
   const handleLink = async () => {
     await InAppBrowser.open(url);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+
+      const res = await suggestionApi({message: msg});
+      if (res.ok && res.data) {
+        setResMsg(res.data.message);
+        setIsVerifyModal(true);
+        setMsg('');
+        setTimeout(setIsVerifyModal, 3000, false);
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -55,6 +79,16 @@ const SuggestionScreen = () => {
         paddingBottom: Platform.OS === 'ios' && keyboardStatus ? 250 : 0,
       }}>
       <AppHeader />
+
+      <AppModal
+        isModalVisible={isVerifyModal}
+        hideLoge
+        hideCloseBtn
+        replaceDefaultContent={
+          <VerificationModal message={resMsg.split(':')[1]} />
+        }
+        handleClose={() => setIsVerifyModal(false)}
+      />
 
       <AppView className="mt-6 bg-red pt-3 px-1 rounded-[15px]">
         <AppView className="flex-row items-center justify-between px-3 pb-2">
@@ -107,15 +141,24 @@ const SuggestionScreen = () => {
               </AppText>
             </TouchableOpacity>
           ) : (
-            <TextInput style={styles.input} autoFocus multiline />
+            <TextInput
+              value={msg}
+              onChangeText={setMsg}
+              style={styles.input}
+              autoFocus
+              multiline
+              autoCorrect={false}
+            />
           )}
         </AppView>
       </AppView>
 
       <AppButton
         title="Submit"
+        isLoading={loading}
+        isDisable={msg.trim() === ''}
         bgColor={colors.RED}
-        onPress={() => console.log('first')}
+        onPress={handleSubmit}
         style={{borderRadius: 6, alignSelf: 'center', marginTop: 40}}
       />
     </AppScreen>

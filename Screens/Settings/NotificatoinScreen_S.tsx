@@ -1,15 +1,50 @@
-import {StyleSheet, Text, View} from 'react-native';
-import React, {useState} from 'react';
+import {Alert, StyleSheet, Text, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import {AppHeader, AppScreen, AppText, AppView} from '@/components';
 import ToggleButton from '@/components/ToggleButton';
+import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
+import {selectUser, setCredentials} from '@/store/slices/userSlice';
+import {getProfileDetails, setNotifications} from '@/api/profile.api';
 
 const NotificatoinScreen_S = () => {
-  const [allowNoti, setAllowNoti] = useState(false);
-  const [upcoming, setUpcoming] = useState(false);
-  const [arrivals, setArrivals] = useState(false);
-  const [liveChannel, setLiveChannel] = useState(false);
-  const [subscription, setSubscription] = useState(false);
-  const [newService, setNewService] = useState(false);
+  const dispatch = useAppDispatch();
+  const {
+    allow_notifications,
+    upcoming_events,
+    live_channels,
+    new_arrivals,
+    new_services,
+    video_quality,
+  } = useAppSelector(selectUser).settings_info;
+  const [allowNoti, setAllowNoti] = useState(allow_notifications);
+  const [upcoming, setUpcoming] = useState(upcoming_events);
+  const [arrivals, setArrivals] = useState(new_arrivals);
+  const [liveChannel, setLiveChannel] = useState(live_channels);
+  const [newService, setNewService] = useState(new_services);
+
+  async function handleSettings() {
+    try {
+      const res = await setNotifications({
+        allow_notifications: allowNoti,
+        upcoming_events: upcoming,
+        new_arrivals: arrivals,
+        live_channels: liveChannel,
+        new_services: newService,
+        video_quality,
+      });
+      if (res.ok && res.data && res.data.message.includes('Successful')) {
+        const user = await getProfileDetails();
+        if (user.ok && user.data) dispatch(setCredentials(user.data.data));
+      }
+    } catch (error) {
+      Alert.alert('error', 'Unable to update settings');
+    }
+  }
+
+  useEffect(() => {
+    handleSettings();
+  }, [allowNoti, upcoming, newService, liveChannel, arrivals]);
+
   return (
     <AppScreen containerStyle={{paddingTop: 20, paddingHorizontal: 0}}>
       <AppView className="px-5">

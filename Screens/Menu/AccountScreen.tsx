@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   AppButton,
   AppImage,
@@ -15,7 +15,7 @@ import {
   AppView,
   TouchableOpacity,
 } from '@/components';
-import {useNavigation} from '@react-navigation/native';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
 import {
   AccountDashboard,
   ArrowRight,
@@ -48,18 +48,47 @@ import {
   setCredentials,
 } from '@/store/slices/userSlice';
 import {pickSingleImage} from '@/Utils/MediaPicker';
-import {getProfileDetails, uploadProfile} from '@/api/profile.api';
+import {
+  getProfileDetails,
+  updateProfileDetails,
+  uploadProfile,
+} from '@/api/profile.api';
 import {formatDate} from '@/Utils/formatTime';
+import {userSubscriptionStatus} from '@/api/subscription.api';
+import {IUserSubscription} from '@/types/api/subscription.types';
+import {WalletDetails} from '@/types/api/payment.type';
+import {walletBalance} from '@/api/payment.api';
+import {formatAmount} from '@/Utils/formatAmount';
+import {LazyLoadImage} from 'react-lazy-load-image-component';
+import FastImage from 'react-native-fast-image';
 
 const AccountScreen = () => {
   const dispatch = useAppDispatch();
+  const isFocused = useIsFocused();
   const {navigate} = useNavigation<AccountdNavProps>();
   const user = useAppSelector(selectUser);
   const profilePic = useAppSelector(selectUserProfilePic);
   const nav = useNavigation<MenuNavigationProps>();
   const [showModal, setShowModal] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const billingService = false;
+  const [wallet, setWallet] = useState<WalletDetails | null>(null);
+  const [billingService, setBillingService] =
+    useState<IUserSubscription | null>(null);
+
+  // async
+  async function handleSubscriptionStatus() {
+    const res = await userSubscriptionStatus();
+    if (res.ok && res.data && res.data.data) {
+      setBillingService(res.data.data);
+    }
+  }
+
+  async function getWallet() {
+    const res = await walletBalance();
+    if (res.ok && res.data && res.data.data) {
+      if (res.data.data.length > 0) setWallet(res.data.data[0]);
+    }
+  }
 
   const openGallery = async () => {
     setLoading(true);
@@ -76,9 +105,17 @@ const AccountScreen = () => {
       const res = await uploadProfile(data);
       console.log(res);
       if (res.ok && res.data) {
-        const profileRes = await getProfileDetails();
-        if (profileRes.ok && profileRes.data) {
-          dispatch(setCredentials(profileRes.data.data));
+        const profileRes = await updateProfileDetails({
+          //@ts-ignore
+          photo: res.data.data,
+        });
+        if (profileRes.ok && profileRes.data?.status === 200) {
+          const profile = await getProfileDetails();
+          if (profile.ok && profile.data) {
+            dispatch(setCredentials(profile.data.data));
+            setLoading(false);
+          }
+        } else {
           setLoading(false);
         }
       } else {
@@ -91,6 +128,11 @@ const AccountScreen = () => {
     nav.navigate(routes.AUTH);
     setShowModal(false);
   }
+
+  useEffect(() => {
+    handleSubscriptionStatus();
+    getWallet();
+  }, [isFocused]);
 
   console.log(profilePic, 'pic', user);
 
@@ -112,9 +154,17 @@ const AccountScreen = () => {
                   className="w-[64px] h-[64px] rounded-full"
                 />
               ) : (
-                <AppImage
-                  source={{uri: profilePic}}
-                  className="w-[64px] h-[64px] rounded-full"
+                <FastImage
+                  source={{
+                    uri: profilePic,
+                    priority: FastImage.priority.high,
+                    cache: FastImage.cacheControl.web,
+                  }}
+                  style={{
+                    width: 65,
+                    height: 65,
+                    borderRadius: 99,
+                  }}
                 />
               )}
 
@@ -249,8 +299,9 @@ const AccountScreen = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => navigate(routes.ADD_PAYMENT_METHOD)}
-              className="flex-row items-center justify-between">
+              // onPress={() => navigate(routes.ADD_PAYMENT_METHOD)}
+              disabled
+              className="flex-row items-center justify-between opacity-25">
               <AppText className="ml-2 font-MANROPE_400 text-[16px] text-white">
                 {billingService
                   ? 'Change Payment Method '
@@ -261,11 +312,11 @@ const AccountScreen = () => {
             </TouchableOpacity>
 
             <AppView className="mt-10">
-              {billingService ? (
+              {wallet ? (
                 <AppView className="flex-row items-center justify-between px-5">
                   <AppView className="ml-2">
                     <AppText className=" font-ROBOTO_700 text-base text-red">
-                      ₦300.00
+                      ₦{formatAmount(wallet.balance.toString())}.00
                     </AppText>
                     <AppText className=" font-MANROPE_400 text-white text-[14px] text-center">
                       Balance
@@ -290,7 +341,7 @@ const AccountScreen = () => {
               ) : (
                 <AppButton
                   bgColor={colors.RED}
-                  title="Top up"
+                  title="Top up Wallet"
                   onPress={() =>
                     navigate(routes.SUBSCRIPTION_SCREEN, {tab: 'topup'})
                   }

@@ -43,7 +43,10 @@ const Button = ({
     <TouchableOpacity
       style={[
         styles.butnContainer,
-        {backgroundColor: isLoading ? colors.TRENDING_GRAY : bgColor},
+        {
+          backgroundColor:
+            isLoading || isDisable ? colors.TRENDING_GRAY : bgColor,
+        },
         style,
       ]}
       disabled={isDisable}

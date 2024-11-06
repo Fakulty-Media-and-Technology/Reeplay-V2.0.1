@@ -16,17 +16,14 @@ export interface IUpcomingEvents {
   details: string;
   reminder: [];
   release_date: string;
-  portrait_photo: {
-    Bucket: string;
-    Key: string;
-    ContentType: string;
-  };
-  landscape_photo: {
-    Bucket: string;
-    Key: string;
-    ContentType: string;
-  };
+  portrait_photo: string;
+  landscape_photo: string;
   active: true;
   createdAt: string;
   updatedAt: string;
+  trailer: {
+    _id: string;
+    key: string;
+    bucket: string;
+  };
 }

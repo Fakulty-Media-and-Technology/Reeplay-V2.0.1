@@ -20,4 +20,7 @@ export default Object.freeze({
 
   //YELLOW
   YELLOW_500: '#FFCC00',
+
+  //Green
+  green: '#06D097',
 });

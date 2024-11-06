@@ -7,7 +7,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
 import {AppButton, AppText, AppView, TouchableOpacity} from '@/components';
 import Size from '@/Utils/useResponsiveSize';
 import fonts from '@/configs/fonts';
@@ -18,33 +18,74 @@ import {
   BigClose,
   Bitcoin,
   Black_Arrow_right,
+  CardIcon,
   MasterCardIcon,
+  NewCardIcon,
   PayPal,
   Purple_Sub_card,
   RightArrow,
   Sub_VisaIcon,
+  WalletIcon,
 } from '@/assets/icons';
 import {paymentMethods} from '@/configs/data';
 import {formatAmount} from '@/Utils/formatAmount';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
+import {selectUser} from '@/store/slices/userSlice';
+import {useAppSelector} from '@/Hooks/reduxHook';
 
 interface Props {
   setStage: React.Dispatch<React.SetStateAction<string>>;
   tab: string;
+  setSelectedPaymentMethod: React.Dispatch<React.SetStateAction<string | null>>;
+  setText: React.Dispatch<React.SetStateAction<string>>;
+  text: string;
 }
 
 const options = ['500', '1000', '1500', '2500', '3000', '5000'];
 
-const TopUp = ({setStage, tab}: Props) => {
+const TopUp = ({
+  setStage,
+  tab,
+  text,
+  setText,
+  setSelectedPaymentMethod,
+}: Props) => {
+  const user = useAppSelector(selectUser);
   const {goBack} = useNavigation();
-  const [paymentMethod, setPaymentMethod] = useState<string>(paymentMethods[0]);
   const [showList, setShowList] = useState<boolean>(false);
   const [activeIndex, setActiveindex] = useState<number>(0);
-  const [text, setText] = useState<string>('');
   const isFocused = useIsFocused();
   const [reRun, setReRun] = useState<boolean>(false);
+  const [paymentMethodList, setPaymentMethodList] = useState<string[]>([
+    user.paymentDetails
+      ? `.... .... ... ${user.paymentDetails.last4}`
+      : 'VISA | MASTERCARD | VERVE',
+    'USSD | BANK TRANSFER',
+  ]);
+  const [paymentMethod, setPaymentMethod] = useState<string>(
+    paymentMethodList[user.paymentDetails ? 1 : 0],
+  );
+
+  function handleText(value: string) {
+    setText(value);
+
+    options.forEach((option, i) => {
+      console.log(value.replace(',', ''), option, i);
+      if (value.replace(',', '') === option) {
+        setActiveindex(i);
+      } else setActiveindex(-1);
+    });
+  }
+
+  useLayoutEffect(() => {
+    setSelectedPaymentMethod(paymentMethod);
+
+    user.paymentDetails &&
+      setPaymentMethodList(prev => ['USE A NEW CARD', ...prev]);
+  }, []);
 
   useEffect(() => {
+    setText(options[0]);
     if (isFocused) setReRun(true);
   }, []);
 
@@ -68,7 +109,7 @@ const TopUp = ({setStage, tab}: Props) => {
           </AppText>
           <TextInput
             value={formatAmount(text)}
-            onChangeText={setText}
+            onChangeText={handleText}
             placeholder="500"
             placeholderTextColor="#171A1F"
             style={styles.input}
@@ -78,6 +119,7 @@ const TopUp = ({setStage, tab}: Props) => {
 
         <AppView className="mt-7 flex-row justify-evenly gap-x-2 flex-wrap w-full">
           {options.map((option, i) => {
+            console.log(i, option, 'heree', activeIndex);
             const showClicked = activeIndex === i;
             return (
               <TouchableOpacity
@@ -128,11 +170,15 @@ const TopUp = ({setStage, tab}: Props) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{paddingBottom: 400}}>
             <AppView className="space-y-2 mt-4">
-              {paymentMethods.map((pay, i) => {
+              {paymentMethodList.map((pay, i) => {
                 return (
                   <TouchableOpacity
                     key={i}
-                    onPress={() => [setPaymentMethod(pay), setShowList(false)]}
+                    onPress={() => [
+                      setPaymentMethod(pay),
+                      setSelectedPaymentMethod(pay),
+                      setShowList(false),
+                    ]}
                     className="flex-row items-center justify-between px-6 py-5 bg-[#92919614]">
                     {pay.includes('VISA') && (
                       <AppText className="flex-row items-center">
@@ -140,10 +186,13 @@ const TopUp = ({setStage, tab}: Props) => {
                         {'  '} <Sub_VisaIcon />
                       </AppText>
                     )}
-                    {pay.includes('APPLE') && <ApplePay />}
-                    {pay.includes('PAYPAL') && <PayPal />}
+                    {/* {pay.includes('APPLE') && <ApplePay />} */}
+                    {/* {pay.includes('PAYPAL') && <PayPal />} */}
                     {pay.includes('USSD') && <BankUSSD />}
-                    {pay.includes('CRYPTO') && <Bitcoin />}
+                    {pay.includes('WALLET') && <WalletIcon />}
+                    {pay.includes('.....') && <CardIcon />}
+                    {pay.includes('USE A NEW') && <NewCardIcon />}
+                    {/* {pay.includes('CRYPTO') && <Bitcoin />} */}
                     <AppText className="font-MANROPE_400 text-sm text-white">
                       {pay}
                     </AppText>

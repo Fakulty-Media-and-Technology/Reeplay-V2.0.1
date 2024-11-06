@@ -34,16 +34,23 @@ const UpcomingScreen = () => {
     handleUpcomingEvents();
   }, []);
 
-  useEffect(() => {
-    Orientation.lockToPortrait();
-  });
-
-  useLayoutEffect(() => {
-    Orientation.getOrientation(orientation => {
-      console.log('Current UI Orientation: ', orientation);
-      setOrientation(orientation);
+  function checkOrientation() {
+    Orientation.getOrientation(orient => {
+      console.log(orient);
+      if (orient !== 'PORTRAIT') {
+        Orientation.lockToPortrait();
+        checkOrientation();
+      } else {
+        setOrientation(orient);
+      }
+      // dispatch(set(orientation))
     });
-  });
+  }
+
+  useEffect(() => {
+    // Orientation.lockToPortrait();
+    checkOrientation();
+  }, []);
 
   return (
     <>
@@ -85,7 +92,7 @@ const UpcomingScreen = () => {
                 )}
                 scrollEventThrottle={16}
                 showsVerticalScrollIndicator={false}>
-                {upcomingData.map((item, i) => {
+                {upcomingEvents.map((item, i) => {
                   return (
                     <UpcomingView
                       key={i}

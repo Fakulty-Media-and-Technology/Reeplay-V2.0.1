@@ -35,10 +35,11 @@ export type DrawerNavigatorProps = {
   [routes.NOTIFICATION_SCREEN]: undefined;
   [routes.SUGGESTION_SCREEN]: undefined;
   [routes.GIFT_CARD_SCREEN]: undefined;
-  [routes.LANGUAGE_SCREEN]: undefined;
   [routes.DELETE_ACCOUNT_SCREEN]: undefined;
   [routes.CANCEL_SUBSCRIPTION_SCREEN]: undefined;
-  [routes.VOTE_SCREEN]: undefined;
+  [routes.VOTE_SCREEN]: {
+    _id: string;
+  };
   [routes.SUBSCRIPTION_SCREEN]: {
     tab: string;
   };
@@ -80,7 +81,6 @@ const AppStack = () => {
         component={NotificationScreen}
       />
 
-      <Drawer.Screen name={routes.LANGUAGE_SCREEN} component={LanguageScreen} />
       <Drawer.Screen
         name={routes.DELETE_ACCOUNT_SCREEN}
         component={DeleteScreen}

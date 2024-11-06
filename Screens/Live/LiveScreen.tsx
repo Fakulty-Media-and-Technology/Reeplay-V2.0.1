@@ -6,8 +6,9 @@ import {
   StyleSheet,
   Text,
   View,
+  VirtualizedList,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import Header from '@/Screens/Home/Header';
 import colors from '@/configs/colors';
 import Slider from '@/Screens/Home/components/SliderContainer';
@@ -18,7 +19,9 @@ import DynamicViewContainer from './DynamicViewContainer';
 import Size from '@/Utils/useResponsiveSize';
 import BlurView from 'react-native-blur-effect';
 import {BlurView as Blur} from '@react-native-community/blur';
-import Orientation from 'react-native-orientation-locker';
+import Orientation, {PORTRAIT} from 'react-native-orientation-locker';
+import {useAppSelector} from '@/Hooks/reduxHook';
+import {selectSponsoredEvents} from '@/store/slices/liveEvents/sponsoredSlice';
 
 const LiveScreen = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -26,12 +29,18 @@ const LiveScreen = () => {
   const [isScrolled, setIsScrolled] = useState(0);
   const [orientation, setOrientation] = useState<string | null>(null);
 
-  useEffect(() => {
-    Orientation.getOrientation(orientation => {
-      console.log('Current UI Orientation: ', orientation);
-      setOrientation(orientation);
-    });
-  });
+  const getItemCount = () => 1; // One group of items (Slider + DynamicViewContainer)
+
+  const getItem = (_data: any, index: number) => index;
+
+  const renderItem = () => {
+    return (
+      <>
+        <Slider data={LiveSliderData} live />
+        <DynamicViewContainer scrollY={scrollY2} />
+      </>
+    );
+  };
 
   useEffect(() => {
     const listernerID = scrollY.addListener(({value}) => {
@@ -44,9 +53,21 @@ const LiveScreen = () => {
     };
   }, [scrollY]);
 
-  useEffect(() => {
-    Orientation.lockToPortrait();
-  });
+  function checkOrientation() {
+    Orientation.getOrientation(orient => {
+      if (orient !== PORTRAIT) {
+        Orientation.lockToPortrait();
+        checkOrientation();
+      } else {
+        setOrientation(orient);
+      }
+      // dispatch(set(orientation))
+    });
+  }
+
+  useLayoutEffect(() => {
+    checkOrientation();
+  }, []);
   return (
     <>
       <AppView
@@ -77,7 +98,7 @@ const LiveScreen = () => {
             backgroundColor="transparent"
           />
 
-          <ScrollView
+          <VirtualizedList
             onScroll={Animated.event(
               [{nativeEvent: {contentOffset: {y: scrollY}}}],
               {useNativeDriver: false},
@@ -89,11 +110,12 @@ const LiveScreen = () => {
             style={{
               backgroundColor: colors.DEEP_BLACK,
               position: 'relative',
-            }}>
-            <Slider data={LiveSliderData} live />
-
-            <DynamicViewContainer scrollY={scrollY2} />
-          </ScrollView>
+            }}
+            getItemCount={getItemCount}
+            getItem={getItem}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => index.toString()}
+          />
         </>
       ) : (
         <AppView className="w-full h-full bg-black" />
