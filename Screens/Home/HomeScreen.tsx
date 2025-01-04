@@ -15,35 +15,35 @@ import Header from './Header';
 import Slider from './components/SliderContainer';
 import colors from '@/configs/colors';
 import ContinueWatchingComponent from './ContinueWatchingComponent';
-import {ContinueWatching, HeroSliderData, TrendingNow} from '@/configs/data';
-import {AppText, AppView, TouchableOpacity} from '@/components';
+import { ContinueWatching, HeroSliderData, TrendingNow } from '@/configs/data';
+import { AppText, AppView, TouchableOpacity } from '@/components';
 import SwiperContainer from './components/SwiperContainer';
 import SectionHeader from './components/SectionHeader';
-import {Fragment, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import AppCategories from '@/components/AppCategories';
 import Size from '@/Utils/useResponsiveSize';
 import Sections from './components/Sections';
-import {useNavigation} from '@react-navigation/native';
-import {HomeScreenNav, TabMainNavigation} from '@/types/typings';
+import { useNavigation } from '@react-navigation/native';
+import { HomeScreenNav, TabMainNavigation } from '@/types/typings';
 import routes from '@/navigation/routes';
 import BlurView from 'react-native-blur-effect';
-import {BlurView as Blur} from '@react-native-community/blur';
-import {HAS_SKIPPED} from '../authentication/components/AuthFormComponent';
-import {getData, storeData} from '@/Utils/useAsyncStorage';
-import {previewContentType} from '@/navigation/AppNavigator';
-import Orientation, {PORTRAIT} from 'react-native-orientation-locker';
-import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
+import { BlurView as Blur } from '@react-native-community/blur';
+import { HAS_SKIPPED } from '../authentication/components/AuthFormComponent';
+import { getData, storeData } from '@/Utils/useAsyncStorage';
+import { previewContentType } from '@/navigation/AppNavigator';
+import Orientation, { PORTRAIT } from 'react-native-orientation-locker';
+import { useAppDispatch, useAppSelector } from '@/Hooks/reduxHook';
 import {
   selectOrientation,
   setOrientations,
 } from '@/store/slices/orientationSlize';
-import {getProfileDetails} from '@/api/profile.api';
-import {setCredentials} from '@/store/slices/userSlice';
-import {hasUserDetails} from '../Splashscreen/Splashscreen';
-import {LockModalIcon} from '@/assets/icons';
-import Animated, {FadeIn, FadeInDown} from 'react-native-reanimated';
-import {getSponsoredLiveEvents} from '@/api/live.api';
-import {setSponsoredEventProps} from '@/store/slices/liveEvents/sponsoredSlice';
+import { getProfileDetails } from '@/api/profile.api';
+import { setCredentials } from '@/store/slices/userSlice';
+import { hasUserDetails } from '../Splashscreen/Splashscreen';
+import { LockModalIcon } from '@/assets/icons';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { getSponsoredLiveEvents } from '@/api/live.api';
+import { setSponsoredEventProps } from '@/store/slices/liveEvents/sponsoredSlice';
 import LinearGradient from 'react-native-linear-gradient';
 
 const AnimatedView = Animated.createAnimatedComponent(AppView);
@@ -59,8 +59,8 @@ export const MovieVideo: string =
 const HomeScreen = () => {
   const scrollY = useRef(new Ani.Value(0)).current;
   const [isScrolled, setIsScrolled] = useState(0);
-  const {navigate} = useNavigation<HomeScreenNav>();
-  const {navigate: nav, setOptions} = useNavigation<TabMainNavigation>();
+  const { navigate } = useNavigation<HomeScreenNav>();
+  const { navigate: nav, setOptions } = useNavigation<TabMainNavigation>();
   const dispatch = useAppDispatch();
   const [orientation, setOrientation] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -87,11 +87,11 @@ const HomeScreen = () => {
     try {
       const res = await getSponsoredLiveEvents();
       if (res.ok && res.data) dispatch(setSponsoredEventProps(res.data.data));
-    } catch (error) {}
+    } catch (error) { }
   }
 
   useEffect(() => {
-    const listernerID = scrollY.addListener(({value}) => {
+    const listernerID = scrollY.addListener(({ value }) => {
       if (value < 0) return;
       setIsScrolled(value);
     });
@@ -129,7 +129,7 @@ const HomeScreen = () => {
 
   return (
     <>
-      <Pressable
+      {/* <Pressable
         onPress={() => setShowModal(true)}
         onPressIn={() => setShowModal(true)}
         style={{
@@ -138,7 +138,7 @@ const HomeScreen = () => {
           position: 'absolute',
           zIndex: 10,
         }}
-      />
+      /> */}
 
       {orientation === PORTRAIT ? (
         <>
@@ -172,17 +172,17 @@ const HomeScreen = () => {
 
           {/* HOME SCROLL */}
           <Ani.ScrollView
-            scrollEnabled={false}
+            scrollEnabled={true}
             onScroll={Ani.event(
-              [{nativeEvent: {contentOffset: {y: scrollY}}}],
-              {useNativeDriver: false},
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: false },
             )}
             scrollEventThrottle={16}
             // decelerationRate="normal"
             nestedScrollEnabled
             // bounces={false}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{paddingBottom: 50, width: '100%'}}
+            contentContainerStyle={{ paddingBottom: 50, width: '100%' }}
             style={{
               backgroundColor: colors.DEEP_BLACK,
               position: 'relative',
@@ -201,7 +201,7 @@ const HomeScreen = () => {
                     showsHorizontalScrollIndicator={false}
                     bounces={false}
                     keyExtractor={(_, i) => i.toString()}
-                    renderItem={({item, index}) => {
+                    renderItem={({ item, index }) => {
                       return (
                         <ContinueWatchingComponent item={item} key={index} />
                       );
@@ -214,7 +214,7 @@ const HomeScreen = () => {
                     title="Popular on REEPLAY"
                     movieCategories={TrendingNow}
                     onPress={() => console.log('popular')}
-                    style={{marginRight: Size.calcHeight(12)}}
+                    style={{ marginRight: Size.calcHeight(12) }}
                     onPressMovie={() =>
                       nav(routes.PREVIEW_SCREEN, {
                         content: previewContentType['tv series'],
@@ -251,7 +251,7 @@ const HomeScreen = () => {
                 <SectionHeader
                   title="Genres"
                   btnText="SEE ALL"
-                  headerStyle={{marginRight: 12}}
+                  headerStyle={{ marginRight: 12 }}
                   onPress={() => navigate(routes.LIBRARY_SCREEN)}
                 />
               </AppView>
@@ -286,15 +286,15 @@ const HomeScreen = () => {
 
           <AnimatedView
             entering={FadeIn.duration(2000).springify()}
-            style={{height: Size.hp(60)}}
+            style={{ height: Size.hp(60) }}
             className="mt-auto bg-black/50 pt-3">
             <AppView
-              style={{alignSelf: 'center'}}
+              style={{ alignSelf: 'center' }}
               className="h-[2px] w-11 bg-[#DEE1E6]"
             />
 
             <AppView
-              style={{alignSelf: 'center'}}
+              style={{ alignSelf: 'center' }}
               className="flex-row items-center mt-4">
               <LockModalIcon />
               <AppText className="mb-2 font-LEXEND_600 text-white text-lg">
@@ -303,13 +303,13 @@ const HomeScreen = () => {
             </AppView>
 
             <AppText
-              style={{alignSelf: 'center'}}
+              style={{ alignSelf: 'center' }}
               className="font-LEXEND_400 text-white text-xl px-3 mt-3">
               Reeplay video on demand is accepting contents.
             </AppText>
 
             <AppText
-              style={{alignSelf: 'center'}}
+              style={{ alignSelf: 'center' }}
               className="font-MANROPE_400 text-base text-white mt-5 px-2">
               Reeplay streaming app is currently accepting contents. We will
               accept only African contents, produced in and out of Africa,
@@ -317,7 +317,7 @@ const HomeScreen = () => {
             </AppText>
 
             <AppText
-              style={{alignSelf: 'center'}}
+              style={{ alignSelf: 'center' }}
               className="font-MANROPE_400 text-base text-yellow mt-5 px-3">
               <AppText className="text-white">
                 Reeplay VOD Streaming platform accepts contents as Movies, Tv
