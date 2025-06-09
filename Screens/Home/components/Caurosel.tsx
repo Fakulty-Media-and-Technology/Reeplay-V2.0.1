@@ -7,9 +7,9 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
-import React, {Fragment, useEffect, useState} from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import FastImage from 'react-native-fast-image';
-import {AppButton, AppImage, AppText, AppView} from '@/components';
+import { AppButton, AppImage, AppText, AppView } from '@/components';
 import Size from '@/Utils/useResponsiveSize';
 import colors from '@/configs/colors';
 import {
@@ -27,17 +27,19 @@ import {
   LiveSlideProps,
   LiveSliderDataProps,
 } from '@/types/data.types';
-import {useIsFocused, useNavigation} from '@react-navigation/native';
-import {HomeScreenNav, TabMainNavigation} from '@/types/typings';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { HomeScreenNav, TabMainNavigation } from '@/types/typings';
 import routes from '@/navigation/routes';
-import {fullVideoType, previewContentType} from '@/navigation/AppNavigator';
+import { fullVideoType, previewContentType } from '@/navigation/AppNavigator';
 import LinearGradient from 'react-native-linear-gradient';
 import fonts from '@/configs/fonts';
-import {AnimatedLin, MovieVideo} from '../HomeScreen';
-import {LiveEvents} from '@/types/api/live.types';
-import {checkTimeStatus} from '@/Utils/timeStatus';
-import {getLivestreamWatch, getVOD_Stream} from '@/api/live.api';
-import {FadeIn, FadeOut} from 'react-native-reanimated';
+import { AnimatedLin, MovieVideo } from '../HomeScreen';
+import { LiveEvents } from '@/types/api/live.types';
+import { checkTimeStatus } from '@/Utils/timeStatus';
+import { getLivestreamWatch, getVOD_Stream } from '@/api/live.api';
+import { FadeIn, FadeOut } from 'react-native-reanimated';
+import { ILiveContent, IVODContent } from '@/types/api/content.types';
+import { useScreenOrientation } from '@/Hooks/useScreenOrientation';
 
 const ITEM_WIDTH = Size.getWidth() * 0.88;
 const WIDTH = Dimensions.get('window').width;
@@ -45,7 +47,7 @@ const WIDTH = Dimensions.get('window').width;
 const SPACING = 6;
 
 interface Props {
-  item: HomeSlideProps | LiveEvents;
+  item: IVODContent | ILiveContent;
   translate?: Animated.AnimatedInterpolation<string | number>;
   currentIndex: boolean;
   live?: boolean;
@@ -59,40 +61,24 @@ const Caurosel = ({
   currentIndex,
   live,
 }: Props) => {
-  const {navigate} = useNavigation<TabMainNavigation>();
+  const { navigate } = useNavigation<TabMainNavigation>();
   const [videoURL, setVideoURL] = useState<string>('');
   const [imgLoad, setImgLoad] = useState<boolean>(false);
   const isFocused = useIsFocused();
-  const isTime = 'start' in item && checkTimeStatus(item.start, item.expiry);
+  const startTime = 'start' in item ? item.start : item.releaseDate;
+  const endTime = 'start' in item ? item.expiry : item.expiryDate
+  const isTime = checkTimeStatus(startTime, endTime);
+  const { isLandscape } = useScreenOrientation()
 
   // console.log(videoURL, '.....video');
 
   async function getDefaultVideo() {
-    try {
-      if (live && 'preview_video' in item && '_id' in item) {
-        const {key, bucket} = item.preview_video;
-
-        //@ts-ignore
-        // if (!('active' in item.active)) return;
-        const res =
-          isTime === 'normal' || isTime === 'countdown'
-            ? await getVOD_Stream({
-                key,
-                bucket,
-              })
-            : await getLivestreamWatch(item._id);
-
-        if (res.ok && res.data) {
-          setVideoURL(
-            'url' in res.data.data
-              ? res.data.data.url
-              : 'video_content' in res.data.data
-              ? res.data.data.video_content
-              : '',
-          );
-        }
-      }
-    } catch (error) {}
+    if (isTime === 'normal' || isTime === 'countdown') {
+      if (live && "start" in item) setVideoURL(item.previewVideo ?? '')
+      if ("admin_id" in item) setVideoURL(item.trailer)
+    } else {
+      //USE SOCKET AND ADD RTMP_HTML_URL
+    }
   }
 
   useEffect(() => {
@@ -112,7 +98,7 @@ const Caurosel = ({
       }}>
       {!live && (
         <AppView
-          style={{width: ITEM_WIDTH, height: '100%', bottom: -1}}
+          style={{ width: ITEM_WIDTH, height: '100%', bottom: -1 }}
           className="overflow-hidden absolute z-[1] rounded-b-[7px]">
           <LinearGradient
             colors={colorsArr}
@@ -149,12 +135,12 @@ const Caurosel = ({
         </AppView>
       )}
 
-      {live && 'photo_url' in item ? (
+      {(live && 'start' in item && item.coverPhoto) && (
         <FastImage
           source={{
-            uri: item.photo_url,
+            uri: item.coverPhoto,
             priority: FastImage.priority.high,
-            cache: FastImage.cacheControl.immutable,
+            cache: FastImage.cacheControl.web,
           }}
           onLoadStart={() => setImgLoad(true)}
           onLoadEnd={() => setImgLoad(false)}
@@ -165,14 +151,24 @@ const Caurosel = ({
             borderRadius: 7,
           }}
         />
-      ) : (
-        <AppImage
-          //@ts-ignore
-          source={item.image}
-          style={{width: ITEM_WIDTH}}
-          className="absolute h-full rounded-[7px]"
-        />
       )}
+
+      {("admin_id" in item && !live) && <FastImage
+        source={{
+          uri: item.portraitPhoto,
+          priority: FastImage.priority.high,
+          cache: FastImage.cacheControl.web,
+        }}
+        onLoadStart={() => setImgLoad(true)}
+        onLoadEnd={() => setImgLoad(false)}
+        style={{
+          width: ITEM_WIDTH,
+          position: 'absolute',
+          height: '100%',
+          borderRadius: 7,
+        }}
+      />}
+
       <AppView className="absolute bottom-4 z-10 items-center">
         <AppText className="text-white text-sm uppercase font-MANROPE_400 mb-3">
           {item.type}
@@ -186,15 +182,15 @@ const Caurosel = ({
         </AppText>
         {!live && (
           <AppView className="flex-row items-center justify-center">
-            {'tags' in item &&
-              item.tags &&
-              item.tags.map((tag, i) => {
+            {'admin_id' in item &&
+              item.genre &&
+              item.genre.map((tag, i) => {
                 return (
                   <Fragment key={i}>
                     <AppText className="font-ROBOTO_400 text-sm text-grey_200">
-                      {tag}
+                      {tag.name}
                     </AppText>
-                    {item.tags && i !== item.tags.length - 1 && (
+                    {item.genre && i !== item.genre.length - 1 && (
                       <AppView className="w-1.5 h-1.5 rounded-full bg-white mt-[2.5px] mx-1.5" />
                     )}
                   </Fragment>
@@ -209,22 +205,21 @@ const Caurosel = ({
             onPress={() =>
               !live
                 ? navigate(routes.PREVIEW_SCREEN, {
-                    content: previewContentType.film,
-                    videoURL: MovieVideo,
-                  })
+                  content: previewContentType.film,
+                  videoURL,
+                })
                 : console.log('first')
             }
             replaceDefaultContent={
               live ? (
-                //@ts-ignore
-                item.vid_class === 'premium' ? (
+                item.vidClass === 'premium' ? (
                   <PremiumIcon_B />
-                ) : 'subscription' in item &&
-                  item.subscription === 'exclusive' ? (
-                  <Exclusive_B />
-                ) : (
-                  <FreeIcon_B />
-                )
+                ) :
+                  item.vidClass === 'exclusive' ? (
+                    <Exclusive_B />
+                  ) : (
+                    <FreeIcon_B />
+                  )
               ) : (
                 <InfoIcon />
               )
@@ -240,18 +235,19 @@ const Caurosel = ({
           />
           <AppButton
             bgColor={colors.RED}
-            onPress={() =>
-              navigate(routes.FULL_SCREEN_VIDEO, {
-                type: live ? fullVideoType.live : fullVideoType.default,
-                videoURL: videoURL,
-                donate: true,
-                live_event_data: item as any,
-                title: item.title,
-                coverImg: 'photo_url' in item ? item.photo_url : '',
-                isTime: isTime === 'now',
-                _id: '_id' in item ? item._id : '',
-              })
-            }
+            onPress={() => console.log('first')}
+            // onPress={() =>
+            //   navigate(routes.FULL_SCREEN_VIDEO, {
+            //     type: live ? fullVideoType.live : fullVideoType.default,
+            //     videoURL: videoURL,
+            //     donate: true,
+            //     live_event_data: item as any,
+            //     title: item.title,
+            //     coverImg: 'start' in item ? item.coverPhoto : '',
+            //     isTime: isTime === 'now',
+            //     _id: '_id' in item ? item._id : '',
+            //   })
+            // }
             style={{
               width: Size.calcHeight(152),
               borderRadius: 4,

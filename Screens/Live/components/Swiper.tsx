@@ -7,7 +7,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AppImage,
   AppText,
@@ -21,8 +21,8 @@ import SectionHeader, {
 import SwiperFlatList from 'react-native-swiper-flatlist';
 import colors from '@/configs/colors';
 import Size from '@/Utils/useResponsiveSize';
-import {LiveChannel} from '@/configs/data';
-import VideoRef, {OnLoadData} from 'react-native-video';
+import { LiveChannel } from '@/configs/data';
+import VideoRef, { OnLoadData } from 'react-native-video';
 import useToggle from '@/Hooks/useToggle';
 import {
   BigPlayIcon,
@@ -37,25 +37,28 @@ import {
 import Dots from 'react-native-dots-pagination';
 import LinearGradient from 'react-native-linear-gradient';
 import fonts from '@/configs/fonts';
-import {BlurView as Blur} from '@react-native-community/blur';
+import { BlurView as Blur } from '@react-native-community/blur';
 import BlurView from 'react-native-blur-effect';
-import {MotiView} from 'moti';
-import {Easing} from 'react-native-reanimated';
-import {fullVideoType} from '@/navigation/AppNavigator';
+import { MotiView } from 'moti';
+import { Easing } from 'react-native-reanimated';
+import { fullVideoType } from '@/navigation/AppNavigator';
 import routes from '@/navigation/routes';
-import {TabMainNavigation} from '@/types/typings';
-import {useNavigation} from '@react-navigation/native';
+import { TabMainNavigation } from '@/types/typings';
+import { useNavigation } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
-import {LiveEvents} from '@/types/api/live.types';
-import {getLivestreamWatch, getVOD_Stream} from '@/api/live.api';
-import {checkTimeStatus} from '@/Utils/timeStatus';
-import {useCountdownTimer} from '@/Hooks/useCountdown';
+import { LiveEvents } from '@/types/api/live.types';
+import { getLivestreamWatch, getVOD_Stream } from '@/api/live.api';
+import { checkTimeStatus } from '@/Utils/timeStatus';
+import { useCountdownTimer } from '@/Hooks/useCountdown';
+import { ILiveContent } from '@/types/api/content.types';
+import convertToProxyURL from 'react-native-video-cache';
+
 
 interface SwiperPros extends headerProps {
   channels?: boolean;
   containerStyle?: ViewStyle;
   mainStyle?: ViewStyle;
-  data: LiveEvents[];
+  data: ILiveContent[];
   spacing?: number;
   scrollY: Animated.Value;
 }
@@ -131,9 +134,9 @@ const Swiper = ({
           paginationStyleItemActive={styles.activePag}
           paginationStyleItem={styles.pagination}
           paginationStyle={styles.center}
-          contentContainerStyle={{marginTop: 13}}
+          contentContainerStyle={{ marginTop: 13 }}
           data={data}
-          renderItem={({item, index}: {item: LiveEvents; index: number}) => {
+          renderItem={({ item, index }: { item: ILiveContent; index: number }) => {
             return (
               <NonChannelComp
                 item={item}
@@ -166,7 +169,7 @@ const Swiper = ({
               setCurrentPage(index);
             }}
             onMomentumScrollBegin={() => setPlayingIndexes([])}
-            renderItem={({item, index}) => {
+            renderItem={({ item, index }) => {
               return (
                 <ChannelComp
                   index={index}
@@ -204,7 +207,7 @@ interface NonChannelCompprops {
   playingIndexes: number[];
   index: number;
   handlePlayVideo(query: number): void;
-  item: LiveEvents;
+  item: ILiveContent;
   videoRefs: React.MutableRefObject<Record<number, VideoRef | null>>;
   containerStyle?: ViewStyle;
   event: boolean;
@@ -230,7 +233,7 @@ export const NonChannelComp = ({
   const [isBufferingLoad, setIsBufferingLoad] = useState(false);
   const isTime = checkTimeStatus(item.start, item.expiry);
   const dateObj = new Date(item.start);
-  const countDown = useCountdownTimer(item.start);
+  const countDown = useCountdownTimer(new Date(item.start).getTime());
 
   const dateM = dateObj.toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -247,28 +250,10 @@ export const NonChannelComp = ({
   });
 
   async function handleVideo() {
-    try {
-      const {key, bucket} = item.preview_video;
-
-      const res =
-        isTime === 'normal' || isTime === 'countdown'
-          ? await getVOD_Stream({
-              key,
-              bucket,
-            })
-          : await getLivestreamWatch(item._id);
-
-      if (res.ok && res.data) {
-        setVideoURL(
-          'url' in res.data.data
-            ? res.data.data.url
-            : 'video_content' in res.data.data
-            ? res.data.data.video_content
-            : '',
-        );
-      }
-    } catch (error) {
-      console.log(error);
+    if (isTime === 'normal' || isTime === 'countdown') {
+      setVideoURL(item.previewVideo ?? '')
+    } else {
+      //USE SOCKET AND ADD RTMP_HTML_URL
     }
   }
 
@@ -278,7 +263,7 @@ export const NonChannelComp = ({
 
   const onLoadStart = () => setIsLoading(true);
 
-  const onBuffer = ({isBuffering}: {isBuffering: boolean}) => {
+  const onBuffer = ({ isBuffering }: { isBuffering: boolean }) => {
     setIsBuffering(isBuffering);
     if (isBuffering) {
       setIsBufferingLoad(true);
@@ -339,8 +324,8 @@ export const NonChannelComp = ({
               {isTime === 'now' && (
                 <AppView className="flex-row items-center gap-x-1">
                   <MotiView
-                    from={{opacity: 0}}
-                    animate={{opacity: 1}}
+                    from={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     transition={{
                       type: 'timing',
                       duration: 1500,
@@ -356,7 +341,7 @@ export const NonChannelComp = ({
                 </AppView>
               )}
 
-              <TouchableOpacity style={{height: 17}} onPress={setMuteVideo}>
+              <TouchableOpacity style={{ height: 17 }} onPress={setMuteVideo}>
                 {muteVideo ? (
                   <AppView className="">
                     <MutedIcon />
@@ -373,7 +358,7 @@ export const NonChannelComp = ({
                   videoURL: videoURL,
                   vote: tvShow,
                   donate: event,
-                  coverImg: item.photo_url,
+                  coverImg: item.coverPhoto ?? '',
                   _id: item._id,
                   title: item.title,
                   isTime: isTime === 'now',
@@ -389,8 +374,8 @@ export const NonChannelComp = ({
         <>
           <AppImage
             className="absolute top-0 bottom-0 z-10"
-            style={[styles.image, {height: 171}]}
-            source={{uri: item.photo_url}}
+            style={[styles.image, { height: 171 }]}
+            source={{ uri: item.coverPhoto ?? '' }}
           />
           <AppView className="w-[303px] px-2 absolute bottom-1.5 flex-row items-center justify-between z-30">
             <AppView>
@@ -421,11 +406,11 @@ export const NonChannelComp = ({
                         color:
                           isTime === 'countdown'
                             ? 'white'
-                            : item.vid_class === 'premium'
-                            ? colors.YELLOW_500
-                            : item.vid_class === 'exclusive'
-                            ? colors.RED
-                            : colors.green,
+                            : item.vidClass === 'premium'
+                              ? colors.YELLOW_500
+                              : item.vidClass === 'exclusive'
+                                ? colors.RED
+                                : colors.green,
                       }}
                       className="font-ROBOTO_700 text-[10px]">
                       {isTime === 'countdown' ? countDown : date}
@@ -438,9 +423,9 @@ export const NonChannelComp = ({
 
           <AppView className="w-[303px] absolute top-0 z-30">
             <AppView className="mt-2 ml-3">
-              {item.vid_class === 'premium' ? (
+              {item.vidClass === 'premium' ? (
                 <PremiumIcon width={20} height={20} />
-              ) : item.vid_class === 'exclusive' ? (
+              ) : item.vidClass === 'exclusive' ? (
                 <Exclusive width={20} height={20} />
               ) : (
                 <FreeIcon width={20} height={20} />
@@ -450,7 +435,7 @@ export const NonChannelComp = ({
         </>
       )}
       <AppVideo
-        source={{uri: videoURL}}
+        source={{ uri: convertToProxyURL(videoURL) }}
         videoRef={(ref: VideoRef | null) => {
           videoRefs.current[index] = ref;
         }}
@@ -491,28 +476,10 @@ export const ChannelComp = ({
   const isTime = checkTimeStatus(item.start, item.expiry);
 
   async function handleVideo() {
-    try {
-      const {key, bucket} = item.preview_video;
-
-      const res =
-        isTime === 'normal' || isTime === 'countdown'
-          ? await getVOD_Stream({
-              key,
-              bucket,
-            })
-          : await getLivestreamWatch(item._id);
-
-      if (res.ok && res.data) {
-        setVideoURL(
-          'url' in res.data.data
-            ? res.data.data.url
-            : 'video_content' in res.data.data
-            ? res.data.data.video_content
-            : '',
-        );
-      }
-    } catch (error) {
-      console.log(error);
+    if (isTime === 'normal' || isTime === 'countdown') {
+      setVideoURL(item.previewVideo ?? '')
+    } else {
+      //USE SOCKET AND ADD RTMP_HTML_URL
     }
   }
 
@@ -522,7 +489,7 @@ export const ChannelComp = ({
 
   const onLoadStart = () => setIsLoading(true);
 
-  const onBuffer = ({isBuffering}: {isBuffering: boolean}) => {
+  const onBuffer = ({ isBuffering }: { isBuffering: boolean }) => {
     setIsBuffering(isBuffering);
     if (isBuffering) {
       setIsBufferingLoad(true);
@@ -584,8 +551,8 @@ export const ChannelComp = ({
               <AppView className="flex-row items-center gap-x-1">
                 {isTime === 'now' && (
                   <MotiView
-                    from={{opacity: 0}}
-                    animate={{opacity: 1}}
+                    from={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     transition={{
                       type: 'timing',
                       duration: 1500,
@@ -601,7 +568,7 @@ export const ChannelComp = ({
                 </AppText>
               </AppView>
 
-              <TouchableOpacity style={{height: 17}} onPress={setMuteVideo}>
+              <TouchableOpacity style={{ height: 17 }} onPress={setMuteVideo}>
                 {muteVideo ? (
                   <AppView className="mt-[3px]">
                     <MutedIcon />
@@ -616,11 +583,11 @@ export const ChannelComp = ({
                 navigation.navigate(routes.FULL_SCREEN_VIDEO, {
                   type: fullVideoType.live,
                   videoURL: videoURL,
-                  channelImage: item.photo_url,
+                  channelImage: item.channelLogo,
                   title: item.title,
                   _id: item._id,
                   isTime: isTime === 'now',
-                  coverImg: item.photo_url,
+                  coverImg: item.coverPhoto ?? '',
                 })
               }>
               <FullscreenIcon />
@@ -629,20 +596,21 @@ export const ChannelComp = ({
         </>
       )}
 
-      {!isPlaying && (
+      {/* {!isPlaying && (
         <AppImage
           className="absolute rounded-[5px] top-0 bottom-0 z-10"
           style={styles.image}
-          source={{uri: item.photo_url}}
+          source={{uri: item.coverPhoto??''}}
         />
-      )}
+      )} */}
 
       <AppVideo
-        source={{uri: videoURL}}
+        source={{ uri: convertToProxyURL(videoURL) }}
         videoRef={(ref: VideoRef | null) => {
           videoRefs.current[index] = ref;
         }}
-        style={{width: 303, height: 161, borderRadius: 5}}
+        poster={item.coverPhoto ?? ''}
+        style={{ width: 303, height: 161, borderRadius: 5 }}
         resizeMode="cover"
         muted={muteVideo}
         repeat

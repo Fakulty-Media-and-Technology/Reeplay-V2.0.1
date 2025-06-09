@@ -1,4 +1,5 @@
-import {IGeneric} from './auth.types';
+import { IGeneric } from './auth.types';
+import { ILiveContent } from './content.types';
 
 export interface LiveEvents {
   _id: string;
@@ -21,7 +22,7 @@ export interface LiveEvents {
 }
 
 export interface LiveEventsResponse extends IGeneric {
-  data: LiveEvents[];
+  data: ILiveContent[];
 }
 
 export interface Contestants {

@@ -10,17 +10,19 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import colors from '@/configs/colors';
 import LinearGradient from 'react-native-linear-gradient';
-import {AppImage, AppText, AppView} from '@/components';
+import { AppImage, AppText, AppView } from '@/components';
 import Size from '@/Utils/useResponsiveSize';
 import Caurosel from './Caurosel';
-import {Rect, Svg} from 'react-native-svg';
-import {HeroSliderDataProps, LiveSliderDataProps} from '@/types/data.types';
+import { Rect, Svg } from 'react-native-svg';
+import { HeroSliderDataProps, LiveSliderDataProps } from '@/types/data.types';
 import Carousel from 'react-native-reanimated-carousel';
-import {useAppSelector} from '@/Hooks/reduxHook';
-import {selectSponsoredEvents} from '@/store/slices/liveEvents/sponsoredSlice';
+import { useAppSelector } from '@/Hooks/reduxHook';
+import { selectSponsoredEvents } from '@/store/slices/liveEvents/sponsoredSlice';
+import { ILiveContent, IVODContent } from '@/types/api/content.types';
+import { generateGradientColors } from '@/Utils/contentUtils';
 
 const SLIDER_HEIGHT =
   Platform.OS === 'ios' ? Size.getHeight() * 0.59 : Size.getHeight() * 0.62;
@@ -32,19 +34,19 @@ const WIDTH = Dimensions.get('window').width;
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 interface SliderProps {
-  data: any; // HeroSliderDataProps[] | LiveSliderDataProps[];
+  data: (IVODContent | ILiveContent)[];
   live?: boolean;
 }
 
 // Type definition for the FlatList component
 type MyFlatList = FlatList<any>;
 
-const Slider = ({data, live}: SliderProps) => {
+const Slider = ({ data, live }: SliderProps) => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const [movieData, setMovieData] = useState([...data, ...data, ...data]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef<MyFlatList>(null); // Reference to the FlatList component
-  const sponsoredEvents = useAppSelector(selectSponsoredEvents);
+  const flatListRef = useRef<MyFlatList>(null);
+  // const sponsoredEvents = useAppSelector(selectSponsoredEvents);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -52,16 +54,16 @@ const Slider = ({data, live}: SliderProps) => {
     const maxScroll = ITEM_WIDTH * secondToLastIndex - 120;
 
     if (contentOffsetX > maxScroll) {
-      flatListRef.current?.scrollToOffset({offset: 0, animated: false});
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
     }
 
     if (contentOffsetX < 0) {
-      flatListRef.current?.scrollToOffset({offset: maxScroll, animated: false});
+      flatListRef.current?.scrollToOffset({ offset: maxScroll, animated: false });
     }
   };
 
   useEffect(() => {
-    const listernerID = scrollX.addListener(({value}) => {
+    const listernerID = scrollX.addListener(({ value }) => {
       if (value < 0) return;
     });
 
@@ -72,7 +74,7 @@ const Slider = ({data, live}: SliderProps) => {
 
   return (
     <AppView
-      style={{height: live ? 510 : 510}}
+      style={{ height: live ? 510 : 510 }}
       className="relative w-full z-0 bg-transparent">
       <LinearGradient
         colors={['rgb(0,0,0)', 'rgba(0,0,0,0.65)', 'transparent']}
@@ -80,11 +82,15 @@ const Slider = ({data, live}: SliderProps) => {
       />
 
       {!live && (
-        <BackDrop data={[...data]} curIndex={currentIndex} scrollX={scrollX} />
+        <BackDrop
+          data={data.filter((item): item is IVODContent => 'admin_id' in item)}
+          curIndex={currentIndex}
+          scrollX={scrollX}
+        />
       )}
 
       {/* Image Carousel */}
-      <View style={{height: 510}}>
+      <View style={{ height: 510 }}>
         <Carousel
           loop
           style={{
@@ -101,19 +107,19 @@ const Slider = ({data, live}: SliderProps) => {
           }}
           mode="parallax"
           snapEnabled={true}
-          data={live ? sponsoredEvents : [...data]}
+          data={data}
           scrollAnimationDuration={200}
           onSnapToItem={index => {
             console.log('current index:', index);
             setCurrentIndex(index);
           }}
-          renderItem={({item, index}) => {
+          renderItem={({ item, index }) => {
             return (
               <>
                 <Caurosel
                   item={item}
                   currentIndex={index === currentIndex}
-                  colors={live ? [] : item.colors2}
+                  colors={live ? [] : ['transparent', 'transparent', generateGradientColors('primaryColor' in item ? item.primaryColor : '#333333')[2]]}
                   live={live}
                 />
               </>
@@ -122,7 +128,7 @@ const Slider = ({data, live}: SliderProps) => {
         />
       </View>
       <Indicators
-        items={live ? sponsoredEvents : [...data]}
+        items={data}
         currentIndex={currentIndex}
       />
     </AppView>
@@ -130,19 +136,12 @@ const Slider = ({data, live}: SliderProps) => {
 };
 
 interface BackDropOptions {
-  data: (
-    | HeroSliderDataProps
-    | LiveSliderDataProps
-    | {
-        title: string;
-        colors: never[];
-      }
-  )[];
+  data: IVODContent[];
   scrollX: Animated.Value;
   curIndex: number;
 }
 
-const BackDrop = ({data, scrollX, curIndex}: BackDropOptions) => {
+const BackDrop = ({ data, scrollX, curIndex }: BackDropOptions) => {
   const MainItem = data;
 
   return (
@@ -158,9 +157,7 @@ const BackDrop = ({data, scrollX, curIndex}: BackDropOptions) => {
           height: SLIDER_HEIGHT,
           overflow: 'hidden',
         }}
-        renderItem={({item, index}) => {
-          if ('colors' in item && item.colors.length === 0) return null;
-
+        renderItem={({ item, index }) => {
           return (
             <Animated.View
               style={{
@@ -168,8 +165,7 @@ const BackDrop = ({data, scrollX, curIndex}: BackDropOptions) => {
                 width: '100%',
               }}>
               <LinearGradient
-                //@ts-ignore
-                colors={MainItem[curIndex].colors}
+                colors={generateGradientColors(item.primaryColor ?? '#333333')}
                 style={{
                   height: SLIDER_HEIGHT,
                   width: '100%',
@@ -188,7 +184,7 @@ interface indicatorData {
   currentIndex: number;
 }
 
-const Indicators = ({items, currentIndex}: indicatorData) => {
+const Indicators = ({ items, currentIndex }: indicatorData) => {
   const [index, setIndex] = useState<number>(0);
 
   useEffect(() => {

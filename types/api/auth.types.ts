@@ -3,6 +3,11 @@ export interface IGeneric {
   message: string;
 }
 
+export interface IPagination {
+  page: number;
+  limit: number;
+}
+
 export interface ISignUpData {
   first_name: string;
   last_name: string;

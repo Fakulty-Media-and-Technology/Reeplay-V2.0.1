@@ -7,14 +7,14 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
-import {AppButton, AppText, AppView, TouchableOpacity} from '@/components';
+import React, { useState } from 'react';
+import { AppButton, AppText, AppView, TouchableOpacity } from '@/components';
 import colors from '@/configs/colors';
 import Size from '@/Utils/useResponsiveSize';
 import fonts from '@/configs/fonts';
-import {CheckIcon, DropDwn, EyeIcon, EyeIcon_C} from '@/assets/icons';
+import { CheckIcon, DropDwn, EyeIcon, EyeIcon_C } from '@/assets/icons';
 import useToggle from '@/Hooks/useToggle';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import {
   AuthMainNavigation,
   LoginScreenProps,
@@ -22,17 +22,19 @@ import {
   SignUpScreenProps,
 } from '@/types/typings';
 import routes from '@/navigation/routes';
-import {CountryPicker} from 'react-native-country-codes-picker';
-import {removeData, storeData} from '@/Utils/useAsyncStorage';
+import { CountryPicker } from 'react-native-country-codes-picker';
+import { removeData, storeData } from '@/Utils/useAsyncStorage';
 import country_codes from '@/configs/country_codes';
 import BottomSheet from './BottomModal';
-import {handleLoginAPI, handleSignUpAPI, resendToken} from '@/api/auth.api';
-import {GUEST_TOKEN} from '@env';
-import {getProfileDetails} from '@/api/profile.api';
-import {useAppDispatch} from '@/Hooks/reduxHook';
-import {setCredentials} from '@/store/slices/userSlice';
-import {hasUserDetails} from '@/Screens/Splashscreen/Splashscreen';
-import {HAS_SET_NEWPIN} from '../GetStartedScreen';
+import { handleLoginAPI, handleSignUpAPI, resendToken } from '@/api/auth.api';
+import { GUEST_TOKEN } from '@env';
+import { getProfileDetails } from '@/api/profile.api';
+import { useAppDispatch } from '@/Hooks/reduxHook';
+import { setCredentials } from '@/store/slices/userSlice';
+import { hasUserDetails } from '@/Screens/Splashscreen/Splashscreen';
+import { HAS_SET_NEWPIN } from '../GetStartedScreen';
+import { bannerApi } from '@/api/content.api';
+import { setBannerContent } from '@/store/slices/bannerSlice.slice';
 
 const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const HAS_SKIPPED = 'SKIPPED';
@@ -58,7 +60,7 @@ const AuthFormComponent = ({
   const dispatch = useAppDispatch();
   const navLogin = useNavigation<LoginScreenProps>();
   const navSignup = useNavigation<SignUpScreenProps>();
-  const {reset} = useNavigation<MainLoginScreenProps>();
+  const { reset } = useNavigation<MainLoginScreenProps>();
   const navigation = useNavigation<AuthMainNavigation>();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -101,6 +103,10 @@ const AuthFormComponent = ({
             await storeData('AUTH_TOKEN', res.data.data.accessToken);
             await storeData('REFRESH_TOKEN', res.data.data.refreshToken);
             const profileRes = await getProfileDetails();
+            const banner = await bannerApi();
+
+            if (banner.ok && banner.data) dispatch(setBannerContent(banner.data.data))
+
             if (profileRes.ok && profileRes.data) {
               await storeData(
                 hasUserDetails,
@@ -126,7 +132,7 @@ const AuthFormComponent = ({
             if (
               res.data &&
               res.data.message.split(':')[1].trim() ===
-                'user account not verified, check your email for verification code'
+              'user account not verified, check your email for verification code'
             ) {
               let userData = {
                 email,
@@ -137,7 +143,7 @@ const AuthFormComponent = ({
             } else {
               setError(
                 res.data?.message.split(':')[1] ||
-                  'Opps, something weent wrong.',
+                'Opps, something weent wrong.',
               );
               setTimeout(() => {
                 setError('');
@@ -171,7 +177,7 @@ const AuthFormComponent = ({
       if (regex.test(email)) {
         setLoading(true);
         //Auth endpoint
-        const res = await resendToken({email});
+        const res = await resendToken({ email });
         console.log(res);
         if (res.ok) {
           setLoading(false);
@@ -294,7 +300,7 @@ const AuthFormComponent = ({
               autoCorrect={false}
               style={[
                 styles.textInput,
-                {flex: 1, marginRight: 10},
+                { flex: 1, marginRight: 10 },
                 Platform.OS === 'android' && {
                   fontSize: Size.calcHeight(14.5),
                   paddingTop: Size.calcHeight(14),
@@ -311,7 +317,7 @@ const AuthFormComponent = ({
               autoCorrect={false}
               style={[
                 styles.textInput,
-                {flex: 1},
+                { flex: 1 },
                 Platform.OS === 'android' && {
                   fontSize: Size.calcHeight(14.5),
                   paddingTop: Size.calcHeight(14),
@@ -330,7 +336,7 @@ const AuthFormComponent = ({
             ]}
             className="flex-row items-center my-6 mb-5">
             <Pressable
-              style={[styles.center, {columnGap: 4}]}
+              style={[styles.center, { columnGap: 4 }]}
               onPress={() => setIsCountryCode(true)}>
               <AppView className="w-7 h-[18px] items-center justify-center overflow-hidden">
                 <AppText className="text-[30px] -mt-2">
@@ -345,7 +351,7 @@ const AuthFormComponent = ({
               onChangeText={setPhoneNo}
               keyboardType="number-pad"
               // maxLength={} TODO: regulate max base on country code
-              style={[styles.text, {flex: 1, marginLeft: 10}]}
+              style={[styles.text, { flex: 1, marginLeft: 10 }]}
             />
           </AppView>
         </>
@@ -373,7 +379,7 @@ const AuthFormComponent = ({
             styles.textInput,
             Platform.OS === 'android' && [
               styles.adjust,
-              {paddingTop: 2, paddingBottom: 3},
+              { paddingTop: 2, paddingBottom: 3 },
             ],
           ]}
           className="flex-row items-center my-6 mt-5 mb-5">
@@ -383,14 +389,14 @@ const AuthFormComponent = ({
             onChangeText={setPassword}
             placeholderTextColor={colors.GREY_100}
             secureTextEntry={toogle}
-            style={[styles.text, {flex: 1}]}
+            style={[styles.text, { flex: 1 }]}
             autoCapitalize="none"
             autoCorrect={false}
           />
           <TouchableOpacity
             onPress={setToogle}
             className="mx-3 mr-5"
-            style={Platform.OS === 'android' && {marginRight: 15}}>
+            style={Platform.OS === 'android' && { marginRight: 15 }}>
             {!toogle ? <EyeIcon /> : <EyeIcon_C />}
           </TouchableOpacity>
         </AppView>
@@ -409,7 +415,7 @@ const AuthFormComponent = ({
               width: '100%',
               paddingVertical: Size.calcHeight(16),
             }}
-            labelStyle={{fontSize: 16}}
+            labelStyle={{ fontSize: 16 }}
           />
         </AppView>
       )}
@@ -427,7 +433,7 @@ const AuthFormComponent = ({
               width: '100%',
               paddingVertical: Size.calcHeight(16),
             }}
-            labelStyle={{fontSize: 16}}
+            labelStyle={{ fontSize: 16 }}
           />
 
           <AppButton
@@ -440,13 +446,13 @@ const AuthFormComponent = ({
               width: '100%',
               paddingVertical: Size.calcHeight(16),
             }}
-            labelStyle={{fontSize: 16}}
+            labelStyle={{ fontSize: 16 }}
           />
         </>
       )}
 
       {screen === 'signUp' && (
-        <AppView style={{marginTop: Size.calcHeight(1)}} className="w-full">
+        <AppView style={{ marginTop: Size.calcHeight(1) }} className="w-full">
           <AppButton
             isLoading={loading}
             title="Create account"
@@ -458,7 +464,7 @@ const AuthFormComponent = ({
               width: '100%',
               paddingVertical: Size.calcHeight(15.8),
             }}
-            labelStyle={{fontSize: 16}}
+            labelStyle={{ fontSize: 16 }}
           />
         </AppView>
       )}
@@ -466,7 +472,7 @@ const AuthFormComponent = ({
       {screen === 'signUp' && (
         <>
           <AppText
-            style={{fontFamily: fonts.INTER_400}}
+            style={{ fontFamily: fonts.INTER_400 }}
             className="mt-8 text-[13px] text-[#9095A0] text-center">
             By signing up, you agree to REEPLAY's
           </AppText>
@@ -476,7 +482,7 @@ const AuthFormComponent = ({
                 Terms of Service
               </AppText>
             </Pressable>
-            <AppText style={[styles.privacyText, {color: '#9095A0'}]}>
+            <AppText style={[styles.privacyText, { color: '#9095A0' }]}>
               and
             </AppText>
             <Pressable
@@ -492,7 +498,7 @@ const AuthFormComponent = ({
       {screen === 'login' && (
         <Pressable
           onPress={() => navLogin.navigate(routes.SIGNUP_SCREEN)}
-          style={{marginTop: Size.calcHeight(38)}}>
+          style={{ marginTop: Size.calcHeight(38) }}>
           <AppText className="font-MANROPE_400 text-base text-red">
             Create new account
           </AppText>
@@ -501,7 +507,7 @@ const AuthFormComponent = ({
 
       {(screen === 'login' || screen === 'signUp') && (
         <AppView
-          style={Platform.OS === 'android' && {marginTop: 1}}
+          style={Platform.OS === 'android' && { marginTop: 1 }}
           className="flex-row items-center mt-3">
           <AppText className="text-base text-[#BCC1CA] font-MANROPE_400 text-center">
             {screen === 'login'
@@ -521,7 +527,7 @@ const AuthFormComponent = ({
                 Platform.OS === 'android' && {
                   fontSize: 14,
                 },
-                {color: screen === 'login' ? '#379AE6' : colors.RED},
+                { color: screen === 'login' ? '#379AE6' : colors.RED },
               ]}
               className="font-MANROPE_400 text-base ml-1">
               {screen === 'login' ? 'Reset it' : 'Log in'}

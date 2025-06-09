@@ -1,34 +1,60 @@
-import {Animated, Platform, ScrollView} from 'react-native';
-import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
-import {AppScreen, AppText, AppView} from '@/components';
+import { Alert, Animated, Platform, ScrollView } from 'react-native';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AppScreen, AppText, AppView } from '@/components';
 import colors from '@/configs/colors';
 import UpcomingView from './components/UpcomingView';
 import upcomingData from '@/configs/upcomingData';
 import Size from '@/Utils/useResponsiveSize';
 import BlurView from 'react-native-blur-effect';
-import {BlurView as Blur} from '@react-native-community/blur';
+import { BlurView as Blur } from '@react-native-community/blur';
 import Orientation from 'react-native-orientation-locker';
-import {getUpcomingEvents} from '@/api/upcomingEvents.api';
-import {IUpcomingEvents} from '@/types/api/upcomingEvents.types';
+import { getUpcomingEvents } from '@/api/upcomingEvents.api';
+import { IUpcomingEvents } from '@/types/api/upcomingEvents.types';
+import { IPagination } from '@/types/api/auth.types';
+import { ILiveContent, IVODContent } from '@/types/api/content.types';
 
 const UpcomingScreen = () => {
   const [playingIndexes, setPlayingIndexes] = useState<number[]>([]);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [orientation, setOrientation] = useState<string | null>(null);
-  const [upcomingEvents, setUpcomingEvents] = useState<IUpcomingEvents[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<(IVODContent | ILiveContent)[]>([]);
+  const [pagination, setPagination] = useState<IPagination>({ page: 1, limit: 20 })
 
   async function handleUpcomingEvents() {
     try {
-      const res = await getUpcomingEvents();
+      const res = await getUpcomingEvents(pagination);
       if (res.ok && res.data) {
-        setUpcomingEvents(res.data.data);
+        const data: (IVODContent | ILiveContent)[] = [...res.data.data.lives, ...res.data.data.vods];
+
+        const sortedData = data.sort((a, b) => {
+          let dateA: Date;
+          let dateB: Date;
+
+          if ('releaseDate' in a) {
+            dateA = new Date(a.releaseDate);
+          } else {
+            dateA = new Date(a.start);
+          }
+
+          if ('releaseDate' in b) {
+            dateB = new Date(b.releaseDate);
+          } else {
+            dateB = new Date(b.start);
+          }
+
+          return dateA.getTime() - dateB.getTime();
+        });
+
+        console.log(sortedData);
+        setUpcomingEvents(sortedData);
       } else {
-        //if endpoint fails
+        Alert.alert(`${res.data?.message}`)
       }
     } catch (error) {
       console.log(error);
     }
   }
+
 
   useLayoutEffect(() => {
     handleUpcomingEvents();
@@ -87,8 +113,8 @@ const UpcomingScreen = () => {
             <AppView>
               <ScrollView
                 onScroll={Animated.event(
-                  [{nativeEvent: {contentOffset: {y: scrollY}}}],
-                  {useNativeDriver: false},
+                  [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                  { useNativeDriver: false },
                 )}
                 scrollEventThrottle={16}
                 showsVerticalScrollIndicator={false}>

@@ -8,26 +8,29 @@ import {
   View,
   VirtualizedList,
 } from 'react-native';
-import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Header from '@/Screens/Home/Header';
 import colors from '@/configs/colors';
 import Slider from '@/Screens/Home/components/SliderContainer';
-import {LiveSliderData} from '@/configs/data';
-import {AppText, AppView} from '@/components';
+import { LiveSliderData } from '@/configs/data';
+import { AppText, AppView } from '@/components';
 import SwiperContainer from '@/Screens/Home/components/SwiperContainer';
 import DynamicViewContainer from './DynamicViewContainer';
 import Size from '@/Utils/useResponsiveSize';
 import BlurView from 'react-native-blur-effect';
-import {BlurView as Blur} from '@react-native-community/blur';
-import Orientation, {PORTRAIT} from 'react-native-orientation-locker';
-import {useAppSelector} from '@/Hooks/reduxHook';
-import {selectSponsoredEvents} from '@/store/slices/liveEvents/sponsoredSlice';
+import { BlurView as Blur } from '@react-native-community/blur';
+import Orientation, { PORTRAIT } from 'react-native-orientation-locker';
+import { useAppSelector } from '@/Hooks/reduxHook';
+import { selectSponsoredEvents } from '@/store/slices/liveEvents/sponsoredSlice';
+import { selectBannerContent } from '@/store/slices/bannerSlice.slice';
 
 const LiveScreen = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const scrollY2 = useRef(new Animated.Value(0)).current;
   const [isScrolled, setIsScrolled] = useState(0);
   const [orientation, setOrientation] = useState<string | null>(null);
+  const live = useAppSelector(selectBannerContent).lives
+
 
   const getItemCount = () => 1; // One group of items (Slider + DynamicViewContainer)
 
@@ -36,14 +39,14 @@ const LiveScreen = () => {
   const renderItem = () => {
     return (
       <>
-        <Slider data={LiveSliderData} live />
+        <Slider data={live} live />
         <DynamicViewContainer scrollY={scrollY2} />
       </>
     );
   };
 
   useEffect(() => {
-    const listernerID = scrollY.addListener(({value}) => {
+    const listernerID = scrollY.addListener(({ value }) => {
       setIsScrolled(value);
       scrollY2.setValue(value);
     });
@@ -100,8 +103,8 @@ const LiveScreen = () => {
 
           <VirtualizedList
             onScroll={Animated.event(
-              [{nativeEvent: {contentOffset: {y: scrollY}}}],
-              {useNativeDriver: false},
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: false },
             )}
             scrollEventThrottle={16}
             decelerationRate="normal"

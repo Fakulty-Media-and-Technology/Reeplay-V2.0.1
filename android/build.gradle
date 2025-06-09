@@ -6,10 +6,21 @@ buildscript {
         targetSdkVersion = 34
         ndkVersion = "25.1.8937393"
         kotlinVersion = "1.8.0"
+
+        useExoplayerSmoothStreaming = true
+
+        // Enable support for DASH (Dynamic Adaptive Streaming over HTTP) with ExoPlayer
+        useExoplayerDash = true
+
+        // Enable support for HLS (HTTP Live Streaming) with ExoPlayer
+        useExoplayerHls = true
     }
     repositories {
         google()
         mavenCentral()
+        maven {
+            url "$rootDir/../node_modules/react-native-video-cache/android/libs"
+        }
     }
     dependencies {
         classpath("com.android.tools.build:gradle")

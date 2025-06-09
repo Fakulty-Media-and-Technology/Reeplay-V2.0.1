@@ -45,6 +45,9 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { getSponsoredLiveEvents } from '@/api/live.api';
 import { setSponsoredEventProps } from '@/store/slices/liveEvents/sponsoredSlice';
 import LinearGradient from 'react-native-linear-gradient';
+import { bannerApi } from '@/api/content.api';
+import { selectBannerContent, setBannerContent } from '@/store/slices/bannerSlice.slice';
+
 
 const AnimatedView = Animated.createAnimatedComponent(AppView);
 export const AnimatedLin = Animated.createAnimatedComponent(LinearGradient);
@@ -64,6 +67,7 @@ const HomeScreen = () => {
   const dispatch = useAppDispatch();
   const [orientation, setOrientation] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const vods = useAppSelector(selectBannerContent).vods
 
   const [isSkipped, setIsSkipped] = useState<boolean>(false);
 
@@ -76,11 +80,15 @@ const HomeScreen = () => {
 
   async function userProfile() {
     const res = await getProfileDetails();
+    const banner = await bannerApi();
+
+    if (banner.ok && banner.data) dispatch(setBannerContent(banner.data.data))
     if (res.ok && res.data) {
       dispatch(setCredentials(res.data.data));
       await storeData(hasUserDetails, JSON.stringify(res.data.data));
     }
   }
+
 
   // LIVE EVENTS FUNCTIONS
   async function getSponsoredEvents() {
@@ -100,7 +108,7 @@ const HomeScreen = () => {
       scrollY.removeListener(listernerID);
     };
   }, [scrollY]);
-  // Update isScrolled state based on scroll position
+
   useEffect(() => {
     getSkippedState();
   }, []);
@@ -108,8 +116,6 @@ const HomeScreen = () => {
   function checkOrientation() {
     Orientation.getOrientation(orient => {
       if (orientation !== orient) dispatch(setOrientations(orient));
-
-      console.log(orientation, orient);
 
       if (orient !== PORTRAIT) {
         Orientation.lockToPortrait();
@@ -120,6 +126,7 @@ const HomeScreen = () => {
       // dispatch(set(orientation))
     });
   }
+
 
   useLayoutEffect(() => {
     checkOrientation();
@@ -187,7 +194,7 @@ const HomeScreen = () => {
               backgroundColor: colors.DEEP_BLACK,
               position: 'relative',
             }}>
-            <Slider data={HeroSliderData} />
+            <Slider data={vods} />
 
             <AppView className="mt-8 pl-5">
               {isSkipped ? (

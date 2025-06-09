@@ -3,6 +3,8 @@
 
 #import <React/RCTBundleURLProvider.h>
 #import "Orientation.h"
+#import <AVFoundation/AVFoundation.h> 
+
 
 @implementation AppDelegate
 
@@ -13,6 +15,8 @@
   self.moduleName = @"ReePlayV2";
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+
   self.initialProps = @{};
 
   return [super application:application didFinishLaunchingWithOptions:launchOptions];

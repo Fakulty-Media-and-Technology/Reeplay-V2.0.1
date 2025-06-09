@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* ReePlayV2Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* ReePlayV2Tests.m */; };
 		02E5FE27706B45CA845325EB /* Outfit-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 96705AA8AA7A480BBD8ED346 /* Outfit-Medium.ttf */; };
-		0C80B921A6F3F58F76C31292 /* libPods-ReePlayV2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-ReePlayV2.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
@@ -23,13 +22,14 @@
 		49867552720145089040B599 /* Manrope-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4D00E5A8F58B4C3397AE4913 /* Manrope-Light.ttf */; };
 		4B93FB9A72FE476CBF22822D /* Manrope-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5E409E05E5D5477E96443775 /* Manrope-Bold.ttf */; };
 		4EFF26496D1A4E2D9BFFA07C /* Manrope-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 01B8D1A039154336AE4E3518 /* Manrope-Regular.ttf */; };
+		5075EDB132BDC5B16ED990CC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 27DE8373D6C1D616E3BD61A7 /* PrivacyInfo.xcprivacy */; };
+		51DEF2A3D6FDFF854164870B /* Pods_ReePlayV2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5564F1EFF959EBD6F8CF1033 /* Pods_ReePlayV2.framework */; };
 		584BFBEF218E4F8F8ABB6570 /* Outfit-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AAA7D0DC69E2465CB3D0B38D /* Outfit-ExtraBold.ttf */; };
 		589625A67B8A481590D81261 /* Outfit-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F2BE831571EF4F36A1D9FDEC /* Outfit-SemiBold.ttf */; };
 		63FDBBF7CF8E4D1A963AB9F6 /* Lexend-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 88716367B6F54CD8897FBF59 /* Lexend-Light.ttf */; };
 		67E091295ED44D5D9B9E8907 /* Roboto-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CB20F6CD7ADE41EC8125335F /* Roboto-BoldItalic.ttf */; };
 		6AE1070BC67B447BB6F3FA40 /* Roboto-LightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F55BAF5C350D495292FEEBBA /* Roboto-LightItalic.ttf */; };
 		6B4A5AEC3C5840A6968D3EE3 /* Manrope-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 68DEA8818496419AA6607645 /* Manrope-Medium.ttf */; };
-		7699B88040F8A987B510C191 /* libPods-ReePlayV2-ReePlayV2Tests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-ReePlayV2-ReePlayV2Tests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		8E8A08CE3C5347FFB951BB0E /* Outfit-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 067AEE728EF742C79EB6A4F1 /* Outfit-Bold.ttf */; };
 		91DC8057C27F43D082518597 /* Lexend-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 07D4DC7C8D3E41EFA6F1DEF3 /* Lexend-ExtraBold.ttf */; };
@@ -52,6 +52,7 @@
 		EFA47BED0F57404FAD0B2881 /* Roboto-MediumItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 57FD2F155C874DEB900CC265 /* Roboto-MediumItalic.ttf */; };
 		F617D6A4ED3C4CAEAE822971 /* Lexend-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5CAC4B21472346948626EAE6 /* Lexend-SemiBold.ttf */; };
 		F9F668F0D59648F68EBBE0D0 /* Manrope-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E1DB0066D6A84C9983C5725E /* Manrope-ExtraLight.ttf */; };
+		FD2087C4DACE292A58CC9794 /* Pods_ReePlayV2_ReePlayV2Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A4B6E003FECD1D413E07F0F9 /* Pods_ReePlayV2_ReePlayV2Tests.framework */; };
 		FEB3EDE2603A40A98B7BADA3 /* Manrope-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 27D015568D5D45AABFAB1F32 /* Manrope-SemiBold.ttf */; };
 /* End PBXBuildFile section */
 
@@ -79,22 +80,22 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = ReePlayV2/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ReePlayV2/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = ReePlayV2/main.m; sourceTree = "<group>"; };
-		19F6CBCC0A4E27FBF8BF4A61 /* libPods-ReePlayV2-ReePlayV2Tests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ReePlayV2-ReePlayV2Tests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C9E51DD05594ABAA8F94948 /* Roboto-BlackItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-BlackItalic.ttf"; path = "../assets/fonts/Roboto-BlackItalic.ttf"; sourceTree = "<group>"; };
 		27D015568D5D45AABFAB1F32 /* Manrope-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Manrope-SemiBold.ttf"; path = "../assets/fonts/Manrope-SemiBold.ttf"; sourceTree = "<group>"; };
+		27DE8373D6C1D616E3BD61A7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = ReePlayV2/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		31816B36038049F0831CBBBC /* Outfit-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-ExtraLight.ttf"; path = "../assets/fonts/Outfit-ExtraLight.ttf"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-ReePlayV2.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ReePlayV2.debug.xcconfig"; path = "Target Support Files/Pods-ReePlayV2/Pods-ReePlayV2.debug.xcconfig"; sourceTree = "<group>"; };
 		3BD16ADD3D694D04B7AE3308 /* Roboto-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Light.ttf"; path = "../assets/fonts/Roboto-Light.ttf"; sourceTree = "<group>"; };
 		4D00E5A8F58B4C3397AE4913 /* Manrope-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Manrope-Light.ttf"; path = "../assets/fonts/Manrope-Light.ttf"; sourceTree = "<group>"; };
 		4F1580DF0DD54933B15D9D18 /* Roboto-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Medium.ttf"; path = "../assets/fonts/Roboto-Medium.ttf"; sourceTree = "<group>"; };
 		524B82EAE75D4D689C567474 /* Roboto-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Black.ttf"; path = "../assets/fonts/Roboto-Black.ttf"; sourceTree = "<group>"; };
+		5564F1EFF959EBD6F8CF1033 /* Pods_ReePlayV2.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ReePlayV2.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5709B34CF0A7D63546082F79 /* Pods-ReePlayV2.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ReePlayV2.release.xcconfig"; path = "Target Support Files/Pods-ReePlayV2/Pods-ReePlayV2.release.xcconfig"; sourceTree = "<group>"; };
 		570A6B9C42D749F7BD3A9975 /* Manrope-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Manrope-ExtraBold.ttf"; path = "../assets/fonts/Manrope-ExtraBold.ttf"; sourceTree = "<group>"; };
 		57FD2F155C874DEB900CC265 /* Roboto-MediumItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-MediumItalic.ttf"; path = "../assets/fonts/Roboto-MediumItalic.ttf"; sourceTree = "<group>"; };
 		5ADF2B847FEC42D68639F8BF /* Outfit-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Light.ttf"; path = "../assets/fonts/Outfit-Light.ttf"; sourceTree = "<group>"; };
 		5B7EB9410499542E8C5724F5 /* Pods-ReePlayV2-ReePlayV2Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ReePlayV2-ReePlayV2Tests.debug.xcconfig"; path = "Target Support Files/Pods-ReePlayV2-ReePlayV2Tests/Pods-ReePlayV2-ReePlayV2Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		5CAC4B21472346948626EAE6 /* Lexend-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-SemiBold.ttf"; path = "../assets/fonts/Lexend-SemiBold.ttf"; sourceTree = "<group>"; };
-		5DCACB8F33CDC322A6C60F78 /* libPods-ReePlayV2.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ReePlayV2.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E409E05E5D5477E96443775 /* Manrope-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Manrope-Bold.ttf"; path = "../assets/fonts/Manrope-Bold.ttf"; sourceTree = "<group>"; };
 		670314C35F1444B09345E88F /* Lexend-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-Bold.ttf"; path = "../assets/fonts/Lexend-Bold.ttf"; sourceTree = "<group>"; };
 		68DEA8818496419AA6607645 /* Manrope-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Manrope-Medium.ttf"; path = "../assets/fonts/Manrope-Medium.ttf"; sourceTree = "<group>"; };
@@ -108,6 +109,7 @@
 		8D75C8F305F6434894E227C8 /* Roboto-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Italic.ttf"; path = "../assets/fonts/Roboto-Italic.ttf"; sourceTree = "<group>"; };
 		96705AA8AA7A480BBD8ED346 /* Outfit-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Medium.ttf"; path = "../assets/fonts/Outfit-Medium.ttf"; sourceTree = "<group>"; };
 		9B6654B85B7D4D00832C1086 /* Lexend-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-Black.ttf"; path = "../assets/fonts/Lexend-Black.ttf"; sourceTree = "<group>"; };
+		A4B6E003FECD1D413E07F0F9 /* Pods_ReePlayV2_ReePlayV2Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ReePlayV2_ReePlayV2Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAA7D0DC69E2465CB3D0B38D /* Outfit-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-ExtraBold.ttf"; path = "../assets/fonts/Outfit-ExtraBold.ttf"; sourceTree = "<group>"; };
 		AB40FC7459ED42A38F79A8AD /* Lexend-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-ExtraLight.ttf"; path = "../assets/fonts/Lexend-ExtraLight.ttf"; sourceTree = "<group>"; };
 		B082A520A322405E8B2180D0 /* Lexend-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Lexend-Thin.ttf"; path = "../assets/fonts/Lexend-Thin.ttf"; sourceTree = "<group>"; };
@@ -130,7 +132,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7699B88040F8A987B510C191 /* libPods-ReePlayV2-ReePlayV2Tests.a in Frameworks */,
+				FD2087C4DACE292A58CC9794 /* Pods_ReePlayV2_ReePlayV2Tests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,7 +140,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C80B921A6F3F58F76C31292 /* libPods-ReePlayV2.a in Frameworks */,
+				51DEF2A3D6FDFF854164870B /* Pods_ReePlayV2.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -172,6 +174,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB71A68108700A75B9A /* main.m */,
+				27DE8373D6C1D616E3BD61A7 /* PrivacyInfo.xcprivacy */,
 			);
 			name = ReePlayV2;
 			sourceTree = "<group>";
@@ -180,8 +183,8 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5DCACB8F33CDC322A6C60F78 /* libPods-ReePlayV2.a */,
-				19F6CBCC0A4E27FBF8BF4A61 /* libPods-ReePlayV2-ReePlayV2Tests.a */,
+				5564F1EFF959EBD6F8CF1033 /* Pods_ReePlayV2.framework */,
+				A4B6E003FECD1D413E07F0F9 /* Pods_ReePlayV2_ReePlayV2Tests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -411,6 +414,7 @@
 				E6BE7A1F7183488196218905 /* Roboto-ThinItalic.ttf in Resources */,
 				CE8C1F942C56CBD000F60C4A /* GoogleService-Info.plist in Resources */,
 				C7A974BC8ED4409B90F2627A /* Inter-Regular.ttf in Resources */,
+				5075EDB132BDC5B16ED990CC /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -706,6 +710,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CC = "";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -733,6 +738,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				CXX = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
@@ -751,7 +757,20 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers/react/nativemodule/core",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers/platform/ios",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers/react/renderer/components/view/platform/cxx",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD = "";
+				LDPLUSPLUS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -771,13 +790,10 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-Wl",
-					"-ld_classic",
-				);
+				OTHER_LDFLAGS = "$(inherited)";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				USE_HERMES = true;
 			};
 			name = Debug;
@@ -786,6 +802,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CC = "";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -813,6 +830,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				CXX = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
@@ -824,7 +842,20 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers/react/nativemodule/core",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers/platform/ios",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers/react/renderer/components/view/platform/cxx",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD = "";
+				LDPLUSPLUS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -844,11 +875,7 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-Wl",
-					"-ld_classic",
-				);
+				OTHER_LDFLAGS = "$(inherited)";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

@@ -1,27 +1,30 @@
-import {Platform, Pressable, StyleSheet} from 'react-native';
-import React, {useEffect, useLayoutEffect, useState} from 'react';
-import {AppHeader, AppScreen, AppText, AppView, OTPInput} from '@/components';
-import {useNavigation} from '@react-navigation/native';
-import {AppPINScreenProps, AuthMainNavigation} from '@/types/typings';
+import { Platform, Pressable, StyleSheet } from 'react-native';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { AppHeader, AppScreen, AppText, AppView, OTPInput } from '@/components';
+import { useNavigation } from '@react-navigation/native';
+import { AppPINScreenProps, AuthMainNavigation } from '@/types/typings';
 import routes from '@/navigation/routes';
-import {useAppSelector} from '@/Hooks/reduxHook';
-import {selectUser} from '@/store/slices/userSlice';
+import { useAppDispatch, useAppSelector } from '@/Hooks/reduxHook';
+import { selectUser } from '@/store/slices/userSlice';
 import fonts from '@/configs/fonts';
 import colors from '@/configs/colors';
 import Size from '@/Utils/useResponsiveSize';
-import {getData} from '@/Utils/useAsyncStorage';
-import {HAS_SET_NEWPIN} from './GetStartedScreen';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { getData } from '@/Utils/useAsyncStorage';
+import { HAS_SET_NEWPIN } from './GetStartedScreen';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { bannerApi } from '@/api/content.api';
+import { setBannerContent } from '@/store/slices/bannerSlice.slice';
 
 const AppPIN = () => {
-  const {reset} = useNavigation<AuthMainNavigation>();
-  const {replace} = useNavigation<AppPINScreenProps>();
+  const { reset } = useNavigation<AuthMainNavigation>();
+  const { replace } = useNavigation<AppPINScreenProps>();
   const [appPin, setAppPin] = useState('');
   const [error, setError] = useState<boolean>(false);
   const user = useAppSelector(selectUser);
-  const {top, bottom} = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
 
-  const handlePin = (pin: string) => {
+  const handlePin = async (pin: string) => {
     if (pin.length === 4) {
       if (pin.length !== 4 || appPin !== pin) {
         setError(true);
@@ -29,6 +32,9 @@ const AppPIN = () => {
           setError(false);
         }, 5000);
       } else {
+        const banner = await bannerApi();
+        console.log(banner.data)
+        if (banner.ok && banner.data) dispatch(setBannerContent(banner.data.data))
         reset({
           index: 0,
           routes: [
@@ -75,7 +81,7 @@ const AppPIN = () => {
         <OTPInput pinCount={4} handleCode={code => handlePin(code)} />
         {error && (
           <AppText
-            style={{alignSelf: 'center'}}
+            style={{ alignSelf: 'center' }}
             className="max-w-[120px] text-red text-[16px] text-center font-MANROPE_500 mt-3">
             Invalid PIN. Please try again
           </AppText>
@@ -83,7 +89,7 @@ const AppPIN = () => {
       </AppView>
 
       <Pressable
-        style={{position: 'absolute', bottom: bottom, alignSelf: 'center'}}>
+        style={{ position: 'absolute', bottom: bottom, alignSelf: 'center' }}>
         <AppText style={styles.forgotText}>Forgot PIN?</AppText>
       </Pressable>
     </AppView>

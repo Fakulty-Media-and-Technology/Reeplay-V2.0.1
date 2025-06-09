@@ -1,32 +1,34 @@
-import {Platform, ScrollView, StyleSheet, Text, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import SectionHeader, {
   headerProps,
 } from '@/Screens/Home/components/SectionHeader';
-import {AppImage, AppText, AppView, TouchableOpacity} from '@/components';
+import { AppImage, AppText, AppView, TouchableOpacity } from '@/components';
 import LinearGradient from 'react-native-linear-gradient';
 import Size from '@/Utils/useResponsiveSize';
-import {BlurView as Blur} from '@react-native-community/blur';
+import { BlurView as Blur } from '@react-native-community/blur';
 import BlurView from 'react-native-blur-effect';
 import fonts from '@/configs/fonts';
 import colors from '@/configs/colors';
 import routes from '@/navigation/routes';
-import {fullVideoType} from '@/navigation/AppNavigator';
-import {useNavigation} from '@react-navigation/native';
-import {TabMainNavigation} from '@/types/typings';
-import {Exclusive, FreeIcon, PremiumIcon} from '@/assets/icons';
-import {LiveEvents} from '@/types/api/live.types';
-import {checkTimeStatus} from '@/Utils/timeStatus';
-import {getLivestreamWatch, getVOD_Stream} from '@/api/live.api';
-import {useCountdownTimer} from '@/Hooks/useCountdown';
-import {MotiView} from 'moti';
-import {Easing} from 'react-native-reanimated';
+import { fullVideoType } from '@/navigation/AppNavigator';
+import { useNavigation } from '@react-navigation/native';
+import { TabMainNavigation } from '@/types/typings';
+import { Exclusive, FreeIcon, PremiumIcon } from '@/assets/icons';
+import { LiveEvents } from '@/types/api/live.types';
+import { checkTimeStatus } from '@/Utils/timeStatus';
+import { getLivestreamWatch, getVOD_Stream } from '@/api/live.api';
+import { useCountdownTimer } from '@/Hooks/useCountdown';
+import { MotiView } from 'moti';
+import { Easing } from 'react-native-reanimated';
+import { ILiveContent } from '@/types/api/content.types';
+import FastImage from 'react-native-fast-image';
 
 interface OthersProps extends headerProps {
-  data: LiveEvents[];
+  data: ILiveContent[];
 }
 
-const OthersView = ({data, title}: OthersProps) => {
+const OthersView = ({ data, title }: OthersProps) => {
   const tvShow = title === 'Others in TV Shows';
   const event = title === 'Others in Events';
   return (
@@ -68,15 +70,15 @@ interface CompProps {
   index: number;
   event: boolean;
   tvShow: boolean;
-  item: LiveEvents;
+  item: ILiveContent;
 }
 
-export const Comp = ({index, event, tvShow, item}: CompProps) => {
+export const Comp = ({ index, event, tvShow, item }: CompProps) => {
   const navigation = useNavigation<TabMainNavigation>();
   const [videoURL, setVideoURL] = useState<string>('');
   const isTime = checkTimeStatus(item.start, item.expiry);
   const dateObj = new Date(item.start);
-  const countDown = useCountdownTimer(item.start);
+  const countDown = useCountdownTimer(new Date(item.start).getTime());
 
   const dateM = dateObj.toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -94,28 +96,10 @@ export const Comp = ({index, event, tvShow, item}: CompProps) => {
   });
 
   async function handleVideo() {
-    try {
-      const {key, bucket} = item.preview_video;
-
-      const res =
-        isTime === 'normal' || isTime === 'countdown'
-          ? await getVOD_Stream({
-              key,
-              bucket,
-            })
-          : await getLivestreamWatch(item._id);
-
-      if (res.ok && res.data) {
-        setVideoURL(
-          'url' in res.data.data
-            ? res.data.data.url
-            : 'video_content' in res.data.data
-            ? res.data.data.video_content
-            : '',
-        );
-      }
-    } catch (error) {
-      console.log(error);
+    if (isTime === 'normal' || isTime === 'countdown') {
+      setVideoURL(item.previewVideo ?? '')
+    } else {
+      //USE SOCKET AND ADD RTMP_HTML_URL
     }
   }
 
@@ -138,13 +122,17 @@ export const Comp = ({index, event, tvShow, item}: CompProps) => {
         })
       }
       style={
-        Platform.OS === 'ios' ? {width: Size.getWidth() / 2 - 25} : {width: 171}
+        Platform.OS === 'ios' ? { width: Size.getWidth() / 2 - 25 } : { width: 171 }
       }
       className="h-[89px] rounded-t-[5px] overflow-hidden relative">
       <AppImage
         className="absolute top-0 bottom-0 z-10"
-        style={{height: 89, width: 171}}
-        source={{uri: item.photo_url}}
+        style={{ height: 89, width: 171 }}
+        source={{
+          uri: item.coverPhoto ?? '',
+          priority: FastImage.priority.high,
+          cache: FastImage.cacheControl.web
+        }}
       />
       <LinearGradient
         colors={['transparent', 'rgba(0, 0, 0, 0.9)']}
@@ -159,9 +147,9 @@ export const Comp = ({index, event, tvShow, item}: CompProps) => {
 
       <AppView className="w-[303px] absolute top-0 z-30">
         <AppView className="mt-1.5 ml-2">
-          {item.vid_class === 'premium' ? (
+          {item.vidClass === 'premium' ? (
             <PremiumIcon />
-          ) : item.vid_class === 'exclusive' ? (
+          ) : item.vidClass === 'exclusive' ? (
             <Exclusive />
           ) : (
             <FreeIcon />
@@ -188,13 +176,13 @@ export const Comp = ({index, event, tvShow, item}: CompProps) => {
         </AppView>
         <AppView className="flex-row items-center gap-x-2">
           <AppText className="mt-[2px] font-ROBOTO_500 text-[9px] text-white -mr-[4px]">
-            {item.pg}+
+            {item.pg}
           </AppText>
           {isTime === 'now' ? (
             <MotiView
-              from={{opacity: 0}}
-              animate={{opacity: 1}}
-              style={{marginTop: 3, marginLeft: 5}}
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{ marginTop: 3, marginLeft: 5 }}
               transition={{
                 type: 'timing',
                 duration: 1500,
@@ -205,7 +193,7 @@ export const Comp = ({index, event, tvShow, item}: CompProps) => {
               <AppView className="w-[7px] h-[7px] rounded-full bg-red" />
             </MotiView>
           ) : (
-            <AppView className="bg-[#0000009C] px-[10px] pt-[3px] pb-[5px] rounded-[3px]">
+            <AppView className="bg-[#0000009C] px-[10px] pt-[4px] pb-[5px] rounded-[3px]">
               <AppText className="font-ROBOTO_500 text-[8px] text-white">
                 {isTime === 'countdown' ? countDown : date}
               </AppText>

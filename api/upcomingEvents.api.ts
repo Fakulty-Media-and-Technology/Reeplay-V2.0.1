@@ -1,11 +1,11 @@
-import {getData} from '@/Utils/useAsyncStorage';
-import {IGeneric} from '@/types/api/auth.types';
+import { getData } from '@/Utils/useAsyncStorage';
+import { IGeneric, IPagination } from '@/types/api/auth.types';
 import {
   IReminderStatusResponse,
   IUpcomingEventsResponse,
 } from '@/types/api/upcomingEvents.types';
-import {BASE_URL} from '@env';
-import {ApiResponse, create} from 'apisauce';
+import { BASE_URL } from '@env';
+import { ApiResponse, create } from 'apisauce';
 
 const getAuthToken = async (): Promise<string | null> => {
   try {
@@ -39,10 +39,10 @@ const apiCall = async <T>(
   return apiFunction(upcomingEventApi);
 };
 
-export const getUpcomingEvents = async () =>
+export const getUpcomingEvents = async (data: IPagination) =>
   await apiCall<IUpcomingEventsResponse>(upcomingEvent =>
     upcomingEvent.get<IUpcomingEventsResponse>(
-      'customers/upcoming/events/fetch',
+      `customers/upcoming/events/fetch?page=${data.page}&limit=${data.limit}`,
     ),
   );
 

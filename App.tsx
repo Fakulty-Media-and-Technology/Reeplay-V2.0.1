@@ -48,17 +48,17 @@ function App(): React.JSX.Element {
   const navigationRef = useRef<any>(null);
   const date = new Date(1711214160358);
 
-  const requestUserPermission = async () => {
-    await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-    );
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+  // const requestUserPermission = async () => {
+  //   await PermissionsAndroid.request(
+  //     PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+  //   );
+  //   const authStatus = await messaging().requestPermission();
+  //   const enabled =
+  //     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+  //     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-    return enabled;
-  };
+  //   return enabled;
+  // };
 
   const getToken = async () => {
 
@@ -70,8 +70,8 @@ function App(): React.JSX.Element {
     const token = await getData('REFRESH_TOKEN');
     if (token) {
       const res = await validateReefreshToken(token);
-      console.log(res);
-      if (!res.ok && !res.data?.data.valid) {
+      console.log(res.data)
+      if (!res.ok && !res.data?.data) {
         navigationRef.current.reset({
           index: 0,
           routes: [
@@ -140,17 +140,17 @@ function App(): React.JSX.Element {
   }
 
   async function handleTest() {
-    if (await requestUserPermission()) {
-      getToken();
+    // if (await requestUserPermission()) {
+    //   getToken();
 
-      messaging()
-        .getInitialNotification()
-        .then(async rm => {
-          if (rm) {
-            console.log('Notification: ', rm.notification);
-          }
-        });
-    }
+    //   messaging()
+    //     .getInitialNotification()
+    //     .then(async rm => {
+    //       if (rm) {
+    //         console.log('Notification: ', rm.notification);
+    //       }
+    //     });
+    // }
   }
 
   useEffect(() => {
@@ -192,26 +192,7 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     handleTest();
-  }, []);
-
-  useEffect(() => {
-    // Lock to portrait orientation on component mount
     Orientation.lockToPortrait();
-
-    // Define the landscape orientation listener function
-    const handleLandscapeOrientation = () => {
-      console.log('Device rotated to landscape');
-      // Additional logic can be added here if needed    Orientation.lockToPortrait();
-      Orientation.lockToPortrait();
-    };
-
-    // Add the listener for landscape orientation
-    Orientation.addDeviceOrientationListener(handleLandscapeOrientation);
-
-    // Cleanup the listener on component unmount
-    return () => {
-      Orientation.removeDeviceOrientationListener(handleLandscapeOrientation);
-    };
   }, []);
 
   useEffect(() => {

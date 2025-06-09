@@ -1,5 +1,5 @@
-import {Pressable, StyleSheet, Text, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import {
   AppButton,
   AppImage,
@@ -20,7 +20,7 @@ import {
   Watchlists,
 } from '@/assets/icons';
 import Size from '@/Utils/useResponsiveSize';
-import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
+import { CompositeNavigationProp, useNavigation } from '@react-navigation/native';
 import {
   AppStackNavigation,
   AuthMainNavigation,
@@ -30,21 +30,22 @@ import routes from '@/navigation/routes';
 import colors from '@/configs/colors';
 import fonts from '@/configs/fonts';
 import AppModal from '@/components/AppModal';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {DrawerNavigatorProps} from '@/navigation/AppStack';
-import {AuthStackParamList} from '@/navigation/AuthNavigation';
-import {RootStackParamList} from '@/navigation/AppNavigator';
-import {getData, removeData} from '@/Utils/useAsyncStorage';
-import {HAS_SKIPPED} from '../authentication/components/AuthFormComponent';
-import {SignUpNavigationProps} from '../authentication/SignUpScreen';
-import {hasUserDetails} from '../Splashscreen/Splashscreen';
-import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { DrawerNavigatorProps } from '@/navigation/AppStack';
+import { AuthStackParamList } from '@/navigation/AuthNavigation';
+import { RootStackParamList } from '@/navigation/AppNavigator';
+import { getData, removeData } from '@/Utils/useAsyncStorage';
+import { HAS_SKIPPED } from '../authentication/components/AuthFormComponent';
+import { SignUpNavigationProps } from '../authentication/SignUpScreen';
+import { hasUserDetails } from '../Splashscreen/Splashscreen';
+import { useAppDispatch, useAppSelector } from '@/Hooks/reduxHook';
 import {
   logout,
   selectUser,
   selectUserProfilePic,
 } from '@/store/slices/userSlice';
 import FastImage from 'react-native-fast-image';
+import { checkImageUrlValidity } from '@/Utils/ValidateImageUrl';
 
 const tabs = [
   'Account',
@@ -66,7 +67,7 @@ export type MenuNavigationProps = CompositeNavigationProp<
 
 const MenuScreen = () => {
   const user = useAppSelector(selectUser);
-  const {goBack, navigate} = useNavigation<DashboardNavProps>();
+  const { goBack, navigate } = useNavigation<DashboardNavProps>();
   const navigation = useNavigation<AppStackNavigation>();
   const nav = useNavigation<MenuNavigationProps>();
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -74,6 +75,7 @@ const MenuScreen = () => {
   const [ads, setAds] = useState<boolean>(false);
   const dispatch = useAppDispatch();
   const profilePic = useAppSelector(selectUserProfilePic);
+  const [isValidImg, setVallid] = useState<boolean>(false)
 
   async function getSkippedState() {
     const hasSkipped = await getData(HAS_SKIPPED);
@@ -82,10 +84,15 @@ const MenuScreen = () => {
     }
   }
 
+  async function handleValidImg() {
+    const valid = await checkImageUrlValidity(profilePic)
+    setVallid(valid)
+  }
+
   function handleNavigation(selectedTab: string) {
     if (selectedTab === 'Account') navigate(routes.ACCOUNT_SCREEN);
     if (selectedTab === 'Log In')
-      navigation.navigate(routes.AUTH, {screen: routes.LOGIN_SCREEN});
+      navigation.navigate(routes.AUTH, { screen: routes.LOGIN_SCREEN });
     if (selectedTab === 'Watchlist') navigate(routes.WATCHLIST_SCREEN);
     if (selectedTab === 'Create AD') setAds(true);
     if (selectedTab === 'Notifications') navigate(routes.NOTIFICATION_SCREEN);
@@ -102,21 +109,22 @@ const MenuScreen = () => {
     setShowModal(false);
     nav.reset({
       index: 0,
-      routes: [{name: routes.AUTH}],
+      routes: [{ name: routes.AUTH }],
     });
   }
 
   useEffect(() => {
     getSkippedState();
+    handleValidImg();
   }, []);
 
   return (
     <>
-      <AppScreen containerStyle={{paddingTop: Size.calcHeight(20)}}>
+      <AppScreen containerStyle={{ paddingTop: Size.calcHeight(20) }}>
         <AppView className="flex-row items-center justify-between">
           {!isSkipped && (
             <AppView className="flex-row items-center gap-x-3">
-              {profilePic === 'no profile picture' ? (
+              {!isValidImg ? (
                 <AppImage
                   source={require('@/assets/images/bbn.png')}
                   className="w-[64px] h-[64px] rounded-full"
@@ -173,8 +181,8 @@ const MenuScreen = () => {
             onPress={() =>
               isSkipped
                 ? navigation.navigate(routes.AUTH, {
-                    screen: routes.SIGNUP_SCREEN,
-                  })
+                  screen: routes.SIGNUP_SCREEN,
+                })
                 : setShowModal(true)
             }>
             <AppText className="font-MANROPE_400 text-sm text-red">
@@ -220,8 +228,8 @@ const MenuScreen = () => {
       <AppModal
         isModalVisible={ads}
         redCloseBtn
-        LogoStyle={{marginBottom: -30, marginTop: -15}}
-        style={{height: 383}}
+        LogoStyle={{ marginBottom: -30, marginTop: -15 }}
+        style={{ height: 383 }}
         replaceDefaultContent={
           <AppView className="mb-3 mt-5 items-center">
             <AppText className="mt-5 leading-5 font-ROBOTO_500 text-[14px] text-black text-center">

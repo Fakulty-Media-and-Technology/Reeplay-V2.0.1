@@ -1,4 +1,4 @@
-export const checkTimeStatus = (startTime: number, expiryTime: number) => {
+export const checkTimeStatus = (startTime: number | string, expiryTime: number | string) => {
   const currentTime = new Date().getTime(); // Current time in milliseconds
   const start = new Date(startTime).getTime(); // Start time in milliseconds
   const expiry = new Date(expiryTime).getTime(); // Expiry time in milliseconds

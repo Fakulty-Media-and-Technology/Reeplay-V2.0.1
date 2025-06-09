@@ -8,6 +8,7 @@ import userSlice from './slices/userSlice';
 import orientationSlice from './slices/orientationSlize';
 import fullScreenVideoSlice from './slices/fullScreenVideo.slice';
 import sponsoredSlice from './slices/liveEvents/sponsoredSlice';
+import bannerSlice from './slices/bannerSlice.slice';
 
 const middlewares = [
   /* other middlewares */
@@ -18,6 +19,7 @@ const combinedReducer = combineReducers({
   orientation: orientationSlice,
   fullvideo: fullScreenVideoSlice,
   sponsoredEvents: sponsoredSlice,
+  banner: bannerSlice
   // ... more reducers
 });
 

@@ -1,7 +1,11 @@
-import {IGeneric} from './auth.types';
+import { IGeneric } from './auth.types';
+import { ILiveContent, IVODContent } from './content.types';
 
 export interface IUpcomingEventsResponse extends IGeneric {
-  data: IUpcomingEvents[];
+  data: {
+    vods: IVODContent[];
+    lives: ILiveContent[]
+  };
 }
 export interface IReminderStatusResponse extends IGeneric {
   data: {

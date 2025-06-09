@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppButton,
   AppImage,
@@ -15,7 +15,7 @@ import {
   AppView,
   TouchableOpacity,
 } from '@/components';
-import {useIsFocused, useNavigation} from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import {
   AccountDashboard,
   ArrowRight,
@@ -30,7 +30,7 @@ import {
 } from '@/assets/icons';
 import colors from '@/configs/colors';
 import Size from '@/Utils/useResponsiveSize';
-import {AccountdNavProps} from '@/types/typings';
+import { AccountdNavProps } from '@/types/typings';
 import routes from '@/navigation/routes';
 import {
   Asset,
@@ -40,38 +40,40 @@ import {
 } from 'react-native-image-picker';
 import AppModal from '@/components/AppModal';
 import fonts from '@/configs/fonts';
-import {MenuNavigationProps} from './MenuScreen';
-import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
+import { MenuNavigationProps } from './MenuScreen';
+import { useAppDispatch, useAppSelector } from '@/Hooks/reduxHook';
 import {
   selectUser,
   selectUserProfilePic,
   setCredentials,
 } from '@/store/slices/userSlice';
-import {pickSingleImage} from '@/Utils/MediaPicker';
+import { pickSingleImage } from '@/Utils/MediaPicker';
 import {
   getProfileDetails,
   updateProfileDetails,
   uploadProfile,
 } from '@/api/profile.api';
-import {formatDate} from '@/Utils/formatTime';
-import {userSubscriptionStatus} from '@/api/subscription.api';
-import {IUserSubscription} from '@/types/api/subscription.types';
-import {WalletDetails} from '@/types/api/payment.type';
-import {walletBalance} from '@/api/payment.api';
-import {formatAmount} from '@/Utils/formatAmount';
-import {LazyLoadImage} from 'react-lazy-load-image-component';
+import { formatDate } from '@/Utils/formatTime';
+import { userSubscriptionStatus } from '@/api/subscription.api';
+import { IUserSubscription } from '@/types/api/subscription.types';
+import { WalletDetails } from '@/types/api/payment.type';
+import { walletBalance } from '@/api/payment.api';
+import { formatAmount } from '@/Utils/formatAmount';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
 import FastImage from 'react-native-fast-image';
+import { checkImageUrlValidity } from '@/Utils/ValidateImageUrl';
 
 const AccountScreen = () => {
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
-  const {navigate} = useNavigation<AccountdNavProps>();
+  const { navigate } = useNavigation<AccountdNavProps>();
   const user = useAppSelector(selectUser);
   const profilePic = useAppSelector(selectUserProfilePic);
   const nav = useNavigation<MenuNavigationProps>();
   const [showModal, setShowModal] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [wallet, setWallet] = useState<WalletDetails | null>(null);
+  const [isValidImg, setVallid] = useState<boolean>(false)
   const [billingService, setBillingService] =
     useState<IUserSubscription | null>(null);
 
@@ -81,6 +83,11 @@ const AccountScreen = () => {
     if (res.ok && res.data && res.data.data) {
       setBillingService(res.data.data);
     }
+  }
+
+  async function handleValidImg() {
+    const valid = await checkImageUrlValidity(profilePic)
+    setVallid(valid)
   }
 
   async function getWallet() {
@@ -134,11 +141,10 @@ const AccountScreen = () => {
     getWallet();
   }, [isFocused]);
 
-  console.log(profilePic, 'pic', user);
 
   return (
     <>
-      <AppScreen scrollable containerStyle={{paddingTop: 20}}>
+      <AppScreen scrollable containerStyle={{ paddingTop: 20 }}>
         <TouchableOpacity onPress={() => navigate(routes.MENU_SCREEN)}>
           <AppText className="font-ROBOTO_400 text-white text-[15px]">
             Back
@@ -148,7 +154,7 @@ const AccountScreen = () => {
         <AppView className="flex-row items-center justify-between mt-3">
           <AppView className="flex-row items-center gap-x-[14px]">
             <AppView className="relative items-center justify-center">
-              {profilePic === 'no profile picture' ? (
+              {!isValidImg ? (
                 <AppImage
                   source={require('@/assets/images/bbn.png')}
                   className="w-[64px] h-[64px] rounded-full"
@@ -172,7 +178,7 @@ const AccountScreen = () => {
                 <ActivityIndicator
                   size={16}
                   color={colors.WHITE}
-                  style={{position: 'absolute'}}
+                  style={{ position: 'absolute' }}
                 />
               )}
             </AppView>
@@ -279,7 +285,7 @@ const AccountScreen = () => {
             ) : (
               <TouchableOpacity
                 onPress={() =>
-                  navigate(routes.SUBSCRIPTION_SCREEN, {tab: 'getSubscription'})
+                  navigate(routes.SUBSCRIPTION_SCREEN, { tab: 'getSubscription' })
                 }
                 className="flex-row items-center gap-x-2 mb-7">
                 <SubscribeIcon />
@@ -343,7 +349,7 @@ const AccountScreen = () => {
                   bgColor={colors.RED}
                   title="Top up Wallet"
                   onPress={() =>
-                    navigate(routes.SUBSCRIPTION_SCREEN, {tab: 'topup'})
+                    navigate(routes.SUBSCRIPTION_SCREEN, { tab: 'topup' })
                   }
                   style={{
                     width: '100%',

@@ -10,8 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
-import {AppImage, AppScreen, AppText, AppVideo, AppView} from '@/components';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AppImage, AppScreen, AppText, AppVideo, AppView } from '@/components';
 import VideoRef, {
   OnLoadData,
   OnProgressData,
@@ -41,26 +41,28 @@ import {
   VolumeIcon,
 } from '@/assets/icons';
 import LinearGradient from 'react-native-linear-gradient';
-import {MotiView} from 'moti';
-import {Easing} from 'react-native-reanimated';
-import {FullScreenVideo, FullScreenVideoRoute} from '@/types/typings';
+import { MotiView } from 'moti';
+import { Easing } from 'react-native-reanimated';
+import { FullScreenVideo, FullScreenVideoRoute } from '@/types/typings';
 import colors from '@/configs/colors';
 import SeekBar from './components/SeekBar';
-import {formatDuration} from '@/Utils/formatVideoDuration';
+import { formatDuration } from '@/Utils/formatVideoDuration';
 import Size from '@/Utils/useResponsiveSize';
 import BrightnessBar from './components/BrightnessBar';
-import {fullVideoType} from '@/navigation/AppNavigator';
+import { fullVideoType } from '@/navigation/AppNavigator';
 import LottieView from 'lottie-react-native';
 import routes from '@/navigation/routes';
 import BlurView from 'react-native-blur-effect';
-import {BlurView as Blur} from '@react-native-community/blur';
-import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
+import { BlurView as Blur } from '@react-native-community/blur';
+import { useAppDispatch, useAppSelector } from '@/Hooks/reduxHook';
 import {
   resetFullVideo,
   selectFullVideoProps,
   setFullVideoProps,
 } from '@/store/slices/fullScreenVideo.slice';
 import FastImage from 'react-native-fast-image';
+import convertToProxyURL from 'react-native-video-cache';
+
 
 const AnimatedLinear = Animated.createAnimatedComponent(LinearGradient);
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
@@ -100,7 +102,7 @@ const FullScreenModal = () => {
   const [orientation, setOrientation] = useState<string | null>(null);
   const [show, setShow] = useState(false);
   const [cover, setCover] = useState<boolean>(true);
-  const {upcoming, coverImg, isTime} = route.params;
+  const { upcoming, coverImg, isTime } = route.params;
   const [key, setKey] = useState(0);
 
   useFocusEffect(
@@ -151,7 +153,7 @@ const FullScreenModal = () => {
       // Orientation.lockToPortrait();
       navigation.navigate(routes.MAIN, {
         screen: routes.SUBSCRIPTION_SCREEN,
-        params: {tab: 'donate'},
+        params: { tab: 'donate' },
       });
     }
 
@@ -228,7 +230,7 @@ const FullScreenModal = () => {
     videoRef.current?.seek(time);
   };
 
-  const onBuffer = ({isBuffering}: {isBuffering: boolean}) => {
+  const onBuffer = ({ isBuffering }: { isBuffering: boolean }) => {
     setIsBuffering(isBuffering);
     if (isBuffering) {
       setIsBufferingLoad(true);
@@ -279,7 +281,7 @@ const FullScreenModal = () => {
       loadingTimeout = setTimeout(() => {
         existFullscreen();
         Alert.alert('Info', 'Opps! Something went wrong, service timeout'),
-          {text: 'OK'};
+          { text: 'OK' };
         setIsLoading(false);
       }, 20000);
     };
@@ -439,7 +441,7 @@ const FullScreenModal = () => {
                 backgroundColor: isLoading ? colors.DEEP_BLACK : 'transparent',
               }}>
               {/* Cover photo */}
-              {cover && (
+              {/* {cover && (
                 <FastImage
                   source={{
                     uri: coverImg,
@@ -454,7 +456,7 @@ const FullScreenModal = () => {
                     zIndex: 15,
                   }}
                 />
-              )}
+              )} */}
 
               {!isLoading ? (
                 <>
@@ -494,7 +496,7 @@ const FullScreenModal = () => {
                       justifyContent: 'center',
                       opacity: opacityU.current,
                     }}>
-                    <AppView style={{alignSelf: 'center'}} className="ml-[5px]">
+                    <AppView style={{ alignSelf: 'center' }} className="ml-[5px]">
                       <BrightnessIcon />
                     </AppView>
                     <AppView className="relative mt-3 overflow-hidden h-[200px] w-[60%]">
@@ -548,7 +550,7 @@ const FullScreenModal = () => {
                         {isPlaying ? (
                           <B_PlayBtn />
                         ) : (
-                          <B_PauseBtn style={{marginLeft: -20}} />
+                          <B_PauseBtn style={{ marginLeft: -20 }} />
                         )}
                       </TouchableOpacity>
                     )}
@@ -566,7 +568,7 @@ const FullScreenModal = () => {
                   <Animated.View
                     style={[
                       styles.topView,
-                      {transform: [{translateY: transU.current}]},
+                      { transform: [{ translateY: transU.current }] },
                     ]}>
                     <AppView className="ml-7 flex-row items-center">
                       {channelImg && channelImg !== '' && (
@@ -590,18 +592,18 @@ const FullScreenModal = () => {
                     style={[
                       styles.bottomView,
                       {
-                        transform: [{translateY: transD.current}],
+                        transform: [{ translateY: transD.current }],
                       },
                     ]}>
                     <AppView className="flex-row items-center gap-x-4">
                       <AppView
-                        style={{width: isTime ? 65 : 50}}
+                        style={{ width: isTime ? 65 : 50 }}
                         className=" justify-center flex-row items-center gap-x-2">
                         {type === fullVideoType.live && isTime && (
                           <>
                             <MotiView
-                              from={{opacity: 0}}
-                              animate={{opacity: 1}}
+                              from={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
                               transition={{
                                 type: 'timing',
                                 duration: 1000,
@@ -618,7 +620,7 @@ const FullScreenModal = () => {
                       </AppView>
 
                       <TouchableOpacity
-                        style={{height: 17, marginBottom: 5}}
+                        style={{ height: 17, marginBottom: 5 }}
                         onPress={setMuteVideo}>
                         {muteVideo ? (
                           <AppView className="mt-[3px]">
@@ -718,7 +720,7 @@ const FullScreenModal = () => {
                     <Animated.View
                       style={[
                         styles.progressBar,
-                        {transform: [{translateY: transD.current}]},
+                        { transform: [{ translateY: transD.current }] },
                       ]}>
                       <AppText className="text-white text-[13px] font-OUTFIT_500 w-[60px]">
                         {formatDuration(duration)}
@@ -765,10 +767,12 @@ const FullScreenModal = () => {
                 </AppView>
               )}
 
-              <View ref={myViewRef} style={{width: '100%', height: '100%'}}>
+              <View ref={myViewRef} style={{ width: '100%', height: '100%' }}>
                 <AppVideo
+                  poster={coverImg}
+                  posterResizeMode='cover'
                   source={{
-                    uri: videoURL,
+                    uri: convertToProxyURL(videoURL),
                   }}
                   videoRef={videoRef}
                   style={{
@@ -787,6 +791,18 @@ const FullScreenModal = () => {
                   onSeek={onSeek}
                   onBuffer={onBuffer}
                   onReadyForDisplay={onReadyForDisplay}
+                  bufferConfig={{
+                    minBufferMs: 2500,
+                    maxBufferMs: 3000,
+                    bufferForPlaybackMs: 2500,
+                    bufferForPlaybackAfterRebufferMs: 2500,
+                  }}
+                  useTextureView={false}
+                  controls={false}
+                  disableFocus={true}
+                  hideShutterView
+                  minLoadRetryCount={5}
+                  shutterColor='transparent'
                 />
               </View>
             </AppScreen>
