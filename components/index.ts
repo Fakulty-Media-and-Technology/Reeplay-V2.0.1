@@ -7,3 +7,4 @@ export {default as AppButton} from './Button';
 export {default as TouchableOpacity} from './AppTouchableOpacity';
 export {default as AppHeader} from './AppHeader';
 export {default as OTPInput} from './OTPInput';
+export { default as AppModal } from "./AppModal";
