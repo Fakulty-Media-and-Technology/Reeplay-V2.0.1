@@ -31,6 +31,7 @@ if linkage != nil
 end
 
 target 'ReePlayV2' do
+  ENV['NODE_BINARY'] = '/opt/homebrew/bin/node'
   config = use_native_modules!
   use_frameworks! :linkage => :static # add
   # $RNFirebaseAsStaticFramework = true # add

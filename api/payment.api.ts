@@ -38,8 +38,11 @@ export const handleCreatePayment = async (data: {
 }) =>
   await apiCall<ICreatePaymentResponse>(paymentApi =>
     paymentApi.post<ICreatePaymentResponse>(
-      '/customers/payment/paystack/create-payment',
-      data,
+      '/customers/shared/initiate-payment',
+      {
+        reference: data.reference,
+        save_card: data.save_card,
+      },
     ),
   );
 
@@ -47,13 +50,15 @@ export const handleAuthorizedPayment = async (
   data: {amount_charge: number},
   token: string,
 ) =>
-  await fetch(`${BASE_URL}/customers/payment/paystack/authorize-payment`, {
+  await fetch(`${BASE_URL}/customers/shared/authorize-payment`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'customer-auth': token,
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      amount_charge: data.amount_charge,
+    }),
   });
 // apiCall<IAuthPaymentResponse>(paymentApi =>
 //   paymentApi.post<IAuthPaymentResponse>(
@@ -74,5 +79,5 @@ export const votePayments = async (data: VotePayments) =>
 
 export const initPayment = async (data: {email: string; amount: number}) =>
   await apiCall<InitPayment>(baseApi =>
-    baseApi.post<InitPayment>('customers/payment/paystack/start-payment', data),
+    baseApi.post<InitPayment>('/customers/shared/initiate-payment', data),
   );

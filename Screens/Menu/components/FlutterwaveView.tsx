@@ -8,17 +8,19 @@ import {useNavigation} from '@react-navigation/native';
 import {SubscriptionNavProps} from '@/types/typings';
 import routes from '@/navigation/routes';
 import LottieView from 'lottie-react-native';
-import {Paystack, paystackProps} from 'react-native-paystack-webview';
 import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
 import {selectUser, setCredentials} from '@/store/slices/userSlice';
 import {ISubscription} from '@/types/api/subscription.types';
-import {PAYSTACK_PUBLIC_KEY} from '@env';
 import {createSubscription} from '@/api/subscription.api';
 import {
   handleAuthorizedPayment,
   handleCreatePayment,
   initPayment,
 } from '@/api/payment.api';
+import {PayWithFlutterwave, FlutterwaveInit} from 'flutterwave-react-native';
+import {FLUTTERWAVE_PUBLIC_KEY} from '@env';
+
+import {getAuthToken} from '@/api/profile.api';
 import {getProfileDetails} from '@/api/profile.api';
 
 interface Props {
@@ -45,7 +47,7 @@ const PayStackView = ({
   const {goBack} = useNavigation();
   const {email} = useAppSelector(selectUser);
   const [save_card, setSaveCard] = useState(false);
-  const paystackWebViewRef = useRef<paystackProps.PayStackRef>();
+  // Removed paystackWebViewRef as paystackProps is no longer available
   const [ref, setRef] = useState<string | null>(null);
 
   async function userProfile() {
@@ -57,17 +59,21 @@ const PayStackView = ({
 
   async function handleAuthPayment() {
     if (!selectedPaymentMethod) return;
-
     try {
       setLoading(true);
-      const res = await handleAuthorizedPayment({
-        amount_charge: selectedPlan ? selectedPlan.price : Number(topUpAmount),
-      });
-      console.log(res);
-      if (res.ok && res.data && res.data.data.data.status === 'success') {
-        // setPaySuccessful(true);
-        const data = res.data.data.data;
-        const reference = data.reference;
+      const token = await getAuthToken();
+      if (!token) {
+        Alert.alert('Authentication error', 'User not authenticated.');
+        setLoading(false);
+        return;
+      }
+      const res = await handleAuthorizedPayment(
+        {amount_charge: selectedPlan ? selectedPlan.price : Number(topUpAmount)},
+        token,
+      );
+      const jsonData = await res.json();
+      if (res.ok && jsonData.data && jsonData.data.status === 'success') {
+        const reference = jsonData.data.reference;
 
         const resX = selectedPlan
           ? await createSubscription({
@@ -92,13 +98,15 @@ const PayStackView = ({
         }
       }
     } catch (error) {
-      console.log(error);
+      console.error('handleAuthPayment error:', error);
+      Alert.alert('Payment error', 'An error occurred during authorized payment.');
     } finally {
       setLoading(false);
     }
   }
 
   async function initPaymentApi() {
+    // TODO: Clarify '....' check below, replace with real condition
     if (!selectedPaymentMethod?.includes('....')) {
       const res = await initPayment({
         email,
@@ -139,6 +147,8 @@ const PayStackView = ({
         Alert.alert('Unable to complete payment request!');
       }
     } catch (error) {
+      console.error('createPayment error:', error);
+      Alert.alert('Payment error', 'An error occurred while processing your payment.');
     } finally {
       setLoading(false);
     }
@@ -158,7 +168,7 @@ const PayStackView = ({
   return (
     <AppScreen containerStyle={{position: 'relative'}}>
       <AppText className="mt-[50%] font-MANROPE_600 text-[40px] text-white text-center">
-        PAYSTACK
+        FLUTTERWAVE
       </AppText>
       {/* <AppText className="font-MANROPE_700 text-[20px] text-center text-grey_200">
         or selected payment processor
@@ -166,56 +176,62 @@ const PayStackView = ({
 
       <View style={{flex: 1}}>
         {ref && (
-          <Paystack
-            //@ts-ignore
-            ref={paystackWebViewRef}
-            paystackKey={PAYSTACK_PUBLIC_KEY}
-            billingEmail={email}
-            amount={selectedPlan?.price ?? topUpAmount}
-            currency="NGN"
-            channels={
-              selectedPaymentMethod?.includes('VISA') ||
-              selectedPaymentMethod?.includes('USE A NEW')
-                ? ['card']
-                : selectedPaymentMethod?.includes('USSD')
-                ? ['ussd', 'bank']
-                : ['bank']
-            }
-            onCancel={e => {
-              // handle response here
-              console.log(e, 'cancelled payments');
-              setStage(selectedPlan ? 'paymentSummary' : 'plan');
+          <PayWithFlutterwave
+            options={{
+              authorization: FLUTTERWAVE_PUBLIC_KEY,
+              tx_ref: ref,
+              amount: selectedPlan?.price ?? Number(topUpAmount),
+              currency: 'NGN',
+              payment_options: selectedPaymentMethod?.includes('VISA') || selectedPaymentMethod?.includes('USE A NEW') ? 'card' : selectedPaymentMethod?.includes('USSD') ? 'ussd,bank' : 'bank',
+              customer: {
+                email: email,
+              },
+              customizations: {
+                title: 'Reeplay Subscription',
+                description: 'Pay for your subscription',
+              },
+              // redirect_url: '', // removed invalid property for FlutterwaveInitOptions
             }}
-            onSuccess={res => {
-              // handle response here
-              const tnxRef = res.data.transactionRef.reference;
-              if (
-                selectedPaymentMethod?.includes('VISA') ||
-                selectedPaymentMethod?.includes('USE A NEW')
-              ) {
-                Alert.alert('', 'Allow Reeplay save card for future payments', [
-                  {
-                    text: 'Cancel',
-                    onPress: () => [
-                      setSaveCard(false),
-                      createPayment(tnxRef, false),
-                    ],
-                    style: 'cancel',
-                  },
-                  {
-                    text: 'OK',
-                    onPress: () => [
-                      setSaveCard(true),
-                      createPayment(tnxRef, true),
-                    ],
-                  },
-                ]);
+            onRedirect={async (data) => {
+              if (data.status === 'successful') {
+                const tnxRef = data.tx_ref;
+                if (
+                  selectedPaymentMethod?.includes('VISA') ||
+                  selectedPaymentMethod?.includes('USE A NEW')
+                ) {
+                  Alert.alert('', 'Allow Reeplay save card for future payments', [
+                    {
+                      text: 'Cancel',
+                      onPress: () => {
+                        setSaveCard(false);
+                        createPayment(tnxRef, false);
+                      },
+                      style: 'cancel',
+                    },
+                    {
+                      text: 'OK',
+                      onPress: () => {
+                        setSaveCard(true);
+                        createPayment(tnxRef, true);
+                      },
+                    },
+                  ]);
+                } else {
+                  createPayment(tnxRef);
+                }
               } else {
-                createPayment(tnxRef);
+                Alert.alert('Payment failed or cancelled');
               }
             }}
-            autoStart={!selectedPaymentMethod?.includes('....')}
-            refNumber={ref}
+            onWillInitialize={() => {
+              console.log('Flutterwave payment will initialize');
+            }}
+            onDidInitialize={() => {
+              console.log('Flutterwave payment did initialize');
+            }}
+            onInitializeError={(error) => {
+              console.error('Flutterwave initialization error:', error);
+            }}
           />
         )}
       </View>

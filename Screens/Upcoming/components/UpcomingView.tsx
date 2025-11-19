@@ -1,5 +1,5 @@
-import { Alert, Animated as Ani, StyleSheet, Text, View } from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import {Alert, Animated as Ani, StyleSheet, Text, View} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   AppImage,
   AppText,
@@ -15,28 +15,27 @@ import {
   UpcomingPlay,
   VolumeIcon,
 } from '@/assets/icons';
-import VideoRef, { OnLoadData } from 'react-native-video';
+import Video, {OnLoadData} from 'react-native-video';
 import useToggle from '@/Hooks/useToggle';
 import LinearGradient from 'react-native-linear-gradient';
-import { fullVideoType } from '@/navigation/AppNavigator';
+import {fullVideoType} from '@/navigation/AppNavigator';
 import routes from '@/navigation/routes';
-import { useNavigation } from '@react-navigation/native';
-import { TabMainNavigation } from '@/types/typings';
+import {useNavigation} from '@react-navigation/native';
+import {TabMainNavigation} from '@/types/typings';
 import LottieView from 'lottie-react-native';
-import { IUpcomingEvents } from '@/types/api/upcomingEvents.types';
+import {IUpcomingEvents} from '@/types/api/upcomingEvents.types';
 import FastImage from 'react-native-fast-image';
-import { upcomingEventDate } from '@/Utils/formatTime';
+import {upcomingEventDate} from '@/Utils/formatTime';
 import Size from '@/Utils/useResponsiveSize';
-import { getVOD_Stream } from '@/api/live.api';
+import {getVOD_Stream} from '@/api/live.api';
 import {
   getReminderStatus,
   subscribeReminderStatus,
   unsubscribeReminderStatus,
 } from '@/api/upcomingEvents.api';
-import Animated, { FadeInLeft } from 'react-native-reanimated';
-import { ILiveContent, IVODContent } from '@/types/api/content.types';
-import convertToProxyURL from 'react-native-video-cache';
-
+import Animated, {FadeInLeft} from 'react-native-reanimated';
+import {ILiveContent, IVODContent} from '@/types/api/content.types';
+import { getCachedVideo } from '@/Utils/videoCache';
 
 const AnimatedView = Animated.createAnimatedComponent(AppView);
 
@@ -57,7 +56,9 @@ const UpcomingView = ({
 }: Props) => {
   const navigation = useNavigation<TabMainNavigation>();
   const isPlaying = playingIndexes.includes(index);
-  const videoRefs = useRef<Record<number, VideoRef | null>>({});
+  const videoRefs = useRef<
+    Record<number, React.ComponentRef<typeof Video> | null>
+  >({});
   const [muteVideo, setMuteVideo] = useState(true);
   const [remindMe, setRemindMe] = useState<boolean>(false);
   const [verticalScrollState, setVerticalScrollState] = useState<number | null>(
@@ -74,7 +75,7 @@ const UpcomingView = ({
 
   const onLoadStart = () => setIsLoading(true);
 
-  const onBuffer = ({ isBuffering }: { isBuffering: boolean }) => {
+  const onBuffer = ({isBuffering}: {isBuffering: boolean}) => {
     setIsBuffering(isBuffering);
     if (isBuffering) {
       setIsBufferingLoad(true);
@@ -97,11 +98,16 @@ const UpcomingView = ({
     }
   }
 
-  async function handleVideo() {
-    if ("start" in items) setVideoURL(items.previewVideo ?? '')
-    if ("admin_id" in items) setVideoURL(items.trailer)
-  }
+ async function handleVideo() {
+  let url = '';
+  if ('start' in items) url = items.previewVideo ?? '';
+  if ('admin_id' in items) url = items.trailer ?? '';
 
+  if (url) {
+    const cachedURL = await getCachedVideo(url);
+    setVideoURL(cachedURL);
+  }
+}
   async function getSubscribedStatus() {
     try {
       const res = await getReminderStatus(items._id);
@@ -155,7 +161,6 @@ const UpcomingView = ({
     getSubscribedStatus();
   }, []);
 
-
   return (
     <AnimatedView
       entering={FadeInLeft.delay(index * 200).springify()}
@@ -165,7 +170,10 @@ const UpcomingView = ({
           <>
             <FastImage
               source={{
-                uri: 'start' in items ? items.coverPhoto ?? '' : items.landscapePhoto,
+                uri:
+                  'start' in items
+                    ? items.coverPhoto ?? ''
+                    : items.landscapePhoto,
                 priority: FastImage.priority.high,
                 cache: FastImage.cacheControl.web,
               }}
@@ -219,7 +227,7 @@ const UpcomingView = ({
             />
             <AppView className="absolute w-[90%] bottom-3 mb-1 px-2 flex-row items-center justify-between z-30">
               <TouchableOpacity
-                style={{ height: 17, marginBottom: 3 }}
+                style={{height: 17, marginBottom: 3}}
                 onPress={() => setMuteVideo(!muteVideo)}>
                 {muteVideo ? (
                   <AppView className="mt-[3px]">
@@ -240,7 +248,10 @@ const UpcomingView = ({
                     donate: true,
                     title: items.title,
                     upcoming: true,
-                    coverImg: 'start' in items ? items.coverPhoto ?? '' : items.landscapePhoto,
+                    coverImg:
+                      'start' in items
+                        ? items.coverPhoto ?? ''
+                        : items.landscapePhoto,
                     _id: items._id,
                   })
                 }>
@@ -252,8 +263,8 @@ const UpcomingView = ({
 
         {isPlaying && (
           <AppVideo
-            source={{ uri: convertToProxyURL(videoURL) }}
-            videoRef={(ref: VideoRef | null) => {
+            source={{uri: (videoURL)}}
+            videoRef={(ref: React.ComponentRef<typeof Video> | null) => {
               videoRefs.current[index] = ref;
             }}
             style={{
@@ -285,7 +296,10 @@ const UpcomingView = ({
         </AppView>
         <AppView className="flex-row items-center">
           <AppText className="uppercase mr-2 font-MANROPE_700 text-[10px] text-grey_200">
-            coming {upcomingEventDate('start' in items ? items.start : items.releaseDate)}
+            coming{' '}
+            {upcomingEventDate(
+              'start' in items ? items.start : items.releaseDate,
+            )}
           </AppText>
           <TouchableOpacity onPress={handleSubscribe}>
             {remindMe ? <RemindMe /> : <UnRemindMe />}

@@ -169,14 +169,14 @@ const PaymentSummaryView = ({
         </AppView>
       </AnimatedView>
 
-      {/* PAYSTACK BUTTON HERE */}
+      {/* FLUTTERWAVE BUTTON HERE */}
 
       {!showList && (
         <AppView className="absolute bottom-10 w-full">
           <AppButton
             bgColor={colors.RED}
             title="Continue"
-            onPress={() => setStage('payStack')}
+            onPress={() => setStage('flutterwave')}
             style={{width: '100%', borderRadius: 8}}
           />
         </AppView>

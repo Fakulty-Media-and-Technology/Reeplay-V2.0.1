@@ -21,7 +21,7 @@ import colors from '@/configs/colors';
 import {ISubscription} from '@/types/api/subscription.types';
 import {formatAmount} from '@/Utils/formatAmount';
 import Animated, {FadeIn, FadeInDown} from 'react-native-reanimated';
-import {Paystack} from 'react-native-paystack-webview';
+import {PayWithFlutterwave} from 'flutterwave-react-native';
 import {useAppSelector} from '@/Hooks/reduxHook';
 import {selectUser} from '@/store/slices/userSlice';
 
@@ -166,7 +166,7 @@ const PaymentSummaryView = ({
           <AppButton
             bgColor={colors.RED}
             title="Continue"
-            onPress={() => setStage('payStack')}
+            onPress={() => setStage('flutterwave')}
             style={{width: '100%', borderRadius: 8}}
           />
         </AppView>

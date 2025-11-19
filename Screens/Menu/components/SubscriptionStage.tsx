@@ -2,7 +2,7 @@ import {StyleSheet, Text, View} from 'react-native';
 import React, {useState} from 'react';
 import PlanView from './PlanView';
 import PaymentSummaryView from './PaymentSummaryView';
-import PayStackView from './PayStackView';
+import PayStackView from './FlutterwaveView';
 import TopUp from './TopUp';
 import {ISubscription} from '@/types/api/subscription.types';
 

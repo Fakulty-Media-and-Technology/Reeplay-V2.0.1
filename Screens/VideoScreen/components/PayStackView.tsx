@@ -9,8 +9,8 @@ import {SubscriptionNavProps, VoteScreenNavProps} from '@/types/typings';
 import routes from '@/navigation/routes';
 import LottieView from 'lottie-react-native';
 import Orientation from 'react-native-orientation-locker';
-import {Paystack, paystackProps} from 'react-native-paystack-webview';
-import {PAYSTACK_PUBLIC_KEY} from '@env';
+import {PayWithFlutterwave} from 'flutterwave-react-native';
+import {FLUTTERWAVE_PUBLIC_KEY} from '@env';
 import {selectUser, setCredentials} from '@/store/slices/userSlice';
 import {useAppDispatch, useAppSelector} from '@/Hooks/reduxHook';
 import {
@@ -45,7 +45,7 @@ const PayStackView = ({
   const [isShowModal, setIsShowModal] = useState(false);
   const {goBack} = useNavigation();
   const [save_card, setSaveCard] = useState<boolean>(false);
-  const paystackWebViewRef = useRef<paystackProps.PayStackRef>();
+  // Removed Paystack ref as paystackProps no longer available
   const [ref, setRef] = useState<string | null>(null);
 
   async function userProfile() {
@@ -170,68 +170,75 @@ const PayStackView = ({
     initPaymentApi();
   }, []);
 
-  console.log(PAYSTACK_PUBLIC_KEY, 'ref.........', ref, paySuccessful);
+  console.log(FLUTTERWAVE_PUBLIC_KEY, 'ref.........', ref, paySuccessful);
 
   return (
     <AppScreen containerStyle={{position: 'relative'}}>
       <AppText className="mt-[80%] font-MANROPE_600 text-[40px] text-white text-center">
-        PAYSTACK
+        FLUTTERWAVE
       </AppText>
       {/* <AppText className="font-MANROPE_700 text-[20px] text-center text-grey_200">
         or selected payment processor
       </AppText> */}
       <View style={{flex: 1}}>
         {ref && (
-          <Paystack
-            //@ts-ignore
-            ref={paystackWebViewRef}
-            paystackKey={PAYSTACK_PUBLIC_KEY}
-            billingEmail={email}
-            amount={100}
-            currency="NGN"
-            channels={
-              selectedPaymentMethod?.includes('VISA') ||
-              selectedPaymentMethod?.includes('USE A NEW')
-                ? ['card']
-                : selectedPaymentMethod?.includes('USSD')
-                ? ['ussd', 'bank']
-                : ['bank']
-            }
-            onCancel={e => {
-              // handle response here
-              console.log(e, 'cancelled payments');
-              setStage('paymentSummary');
-            }}
-            onSuccess={res => {
-              // handle response here
-              const tnxRef = res.data.transactionRef.reference;
-              if (
+          <PayWithFlutterwave
+            options={{
+              authorization: FLUTTERWAVE_PUBLIC_KEY,
+              tx_ref: ref || '',
+              amount: 100,
+              currency: 'NGN',
+              payment_options:
                 selectedPaymentMethod?.includes('VISA') ||
                 selectedPaymentMethod?.includes('USE A NEW')
-              ) {
-                Alert.alert('', 'Allow Reeplay save card for future payments', [
-                  {
-                    text: 'Cancel',
-                    onPress: () => [
-                      setSaveCard(false),
-                      createPayment(tnxRef, false),
-                    ],
-                    style: 'cancel',
-                  },
-                  {
-                    text: 'OK',
-                    onPress: () => [
-                      setSaveCard(true),
-                      createPayment(tnxRef, true),
-                    ],
-                  },
-                ]);
+                  ? 'card'
+                  : selectedPaymentMethod?.includes('USSD')
+                  ? 'ussd,bank'
+                  : 'bank',
+              customer: {
+                email,
+              },
+              customizations: {
+                title: 'Reeplay Payment',
+                description: 'Payment for service',
+              },
+            }}
+            onRedirect={async (data) => {
+              if (data.status === 'successful') {
+                const tnxRef = data.tx_ref;
+                if (
+                  selectedPaymentMethod?.includes('VISA') ||
+                  selectedPaymentMethod?.includes('USE A NEW')
+                ) {
+                  Alert.alert('', 'Allow Reeplay save card for future payments', [
+                    {
+                      text: 'Cancel',
+                      onPress: () => {
+                        setSaveCard(false);
+                        createPayment(tnxRef, false);
+                      },
+                      style: 'cancel',
+                    },
+                    {
+                      text: 'OK',
+                      onPress: () => {
+                        setSaveCard(true);
+                        createPayment(tnxRef, true);
+                      },
+                    },
+                  ]);
+                } else {
+                  createPayment(tnxRef);
+                }
               } else {
-                createPayment(tnxRef);
+                Alert.alert('Payment cancelled or failed');
               }
             }}
-            autoStart={!selectedPaymentMethod?.includes('....')}
-            refNumber={ref}
+            onWillInitialize={() => console.log('Flutterwave will initialize')}
+            onDidInitialize={() => console.log('Flutterwave did initialize')}
+            onInitializeError={error => {
+              console.error('Flutterwave initialization error:', error);
+            }}
           />
         )}
       </View>

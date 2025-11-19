@@ -59,38 +59,21 @@ export interface InitPayment extends IGeneric {
   };
 }
 
-export interface IPaystackUserResponse extends IGeneric {
-  data: IPaystackUser;
-}
+// Removed Paystack specific types as migrating to Flutterwave
 
-export interface IPaystackUser {
-  authorizations: IPaystackUserAuthorizations[];
-}
-
-export interface IPaystackUserAuthorizations {
-  authorization_code: string;
-  last4: string;
-  brand: string;
-}
-
-export interface IPaystackTxnResponse extends IGeneric {
-  data: IPaystackTxn;
-}
-
-export interface IPaystackTxn {
-  id: number;
-  amount: number;
-  authorizations: IPaystackUserAuthorizations;
-}
-
-export interface IPaystackRecurrent {
-  email: string;
-  amount: string;
-  authorization_code: string;
-}
-
-export interface IPaystackRecurrentResponse extends IGeneric {
-  data: IPaystackTxn;
+export interface FlutterwaveRedirectData {
+  tx_ref: string;
+  status: 'successful' | 'failed' | string;
+  transaction_id?: string;
+  flw_ref?: string;
+  amount?: number;
+  currency?: string;
+  customer?: {
+    email?: string;
+    phone_number?: string;
+    name?: string;
+  };
+  [key: string]: any;
 }
 
 export interface VotePayments {

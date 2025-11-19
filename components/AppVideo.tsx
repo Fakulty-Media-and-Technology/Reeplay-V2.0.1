@@ -1,26 +1,23 @@
-import {View, Text, StyleProp, ViewStyle, StyleSheet} from 'react-native';
-import React, {useRef} from 'react';
-import Video, {VideoProperties} from 'react-native-video';
-import VideoRef from 'react-native-video';
+import React from "react";
+import { View, StyleSheet, ViewStyle } from "react-native";
+import Video from "react-native-video";
 
-interface VideoProps extends VideoProperties {
+// ✅ Extend props and allow PiP
+export interface AppVideoProps extends React.ComponentProps<typeof Video> {
   containerStyle?: ViewStyle;
-  source: any;
-  videoRef?:
-    | ((instance: VideoRef | null) => void)
-    | React.RefObject<VideoRef>
-    | null;
+  videoRef?: React.RefObject<React.ElementRef<typeof Video>> | ((instance: React.ElementRef<typeof Video> | null) => void);
+  pictureInPicture?: boolean; // ✅ PiP support
 }
 
-const AppVideo = ({
-  containerStyle,
-  source,
-  videoRef,
-  ...otherProps
-}: VideoProps) => {
+const AppVideo = ({ containerStyle, videoRef, pictureInPicture, ...otherProps }: AppVideoProps) => {
   return (
     <View style={[styles.videoContainer, containerStyle]}>
-      <Video ref={videoRef} source={source} {...otherProps} />
+      {/* ✅ Cast props to any to allow pictureInPicture */}
+      <Video
+        ref={videoRef}
+        {...(otherProps as any)}
+        {...(pictureInPicture !== undefined ? { pictureInPicture } : {})}
+      />
     </View>
   );
 };
@@ -29,7 +26,7 @@ export default AppVideo;
 
 const styles = StyleSheet.create({
   videoContainer: {
-    height: '100%',
-    width: '100%',
+    height: "100%",
+    width: "100%",
   },
 });
