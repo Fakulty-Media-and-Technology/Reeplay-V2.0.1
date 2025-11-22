@@ -1,0 +1,429 @@
+import {
+  ActivityIndicator,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  AppButton,
+  AppImage,
+  AppScreen,
+  AppText,
+  AppView,
+  TouchableOpacity,
+} from '@/components';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import {
+  AccountDashboard,
+  ArrowRight,
+  CardDots,
+  EditIcon,
+  Green_SubscripeIcon,
+  PasswordDashboard,
+  PhoneDashboard,
+  PinDashboard,
+  SubscribeIcon,
+  VisaCard,
+} from '@/assets/icons';
+import colors from '@/configs/colors';
+import Size from '@/Utils/useResponsiveSize';
+import routes from '@/navigation/routes';
+import AppModal from '@/components/AppModal';
+import fonts from '@/configs/fonts';
+import { useAppDispatch, useAppSelector } from '@/Hooks/reduxHook';
+import {
+  selectUser,
+  selectUserProfilePic,
+  selectWalletInfo,
+  setCredentials,
+  setWalletInfo,
+} from '@/store/slices/userSlice';
+import { pickSingleImage } from '@/Utils/MediaPicker';
+import {
+  getProfileDetails,
+  updateProfileDetails,
+  uploadProfile,
+} from '@/api/profile.api';
+import { formatDate } from '@/Utils/formatTime';
+import { userSubscriptionStatus } from '@/api/subscription.api';
+import { IUserSubscription } from '@/types/api/subscription.types';
+import { WalletDetails } from '@/types/api/payment.type';
+import { walletBalance } from '@/api/payment.api';
+import { formatAmount } from '@/Utils/formatAmount';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import FastImage from 'react-native-fast-image';
+import { checkImageUrlValidity } from '@/Utils/ValidateImageUrl';
+import { RootNav } from '@/navigation/AppNavigator';
+import { MenuNavigatorParams } from '@/navigation/AppStack';
+import ToastNotification from '@/components/ToastNotifications';
+
+const AccountScreen = () => {
+  const dispatch = useAppDispatch();
+  const isFocused = useIsFocused();
+  const { navigate, goBack } = useNavigation<MenuNavigatorParams>();
+  const user = useAppSelector(selectUser);
+  const profilePic = useAppSelector(selectUserProfilePic);
+  const nav = useNavigation<RootNav>();
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const wallet = useAppSelector(selectWalletInfo);
+  const [isValidImg, setVallid] = useState<boolean>(false)
+  const [billingService, setBillingService] =
+    useState<IUserSubscription | null>(null);
+
+  // async
+  async function handleSubscriptionStatus() {
+    // const res = await userSubscriptionStatus();
+    // if (res.ok && res.data && res.data.data) {
+    //   setBillingService(res.data.data);
+    // }
+  }
+
+  async function handleValidImg() {
+    const valid = await checkImageUrlValidity(profilePic)
+    setVallid(valid)
+  }
+
+  async function getWallet() {
+    const res = await walletBalance();
+    if (res.ok && res.data) {
+      dispatch(setWalletInfo(res.data.data));
+    }
+  }
+
+  const openGallery = async () => {
+    setLoading(true);
+    const result = await pickSingleImage();
+    if (result && result.uri && result.fileName && result.type) {
+      let data = new FormData();
+      data.append('photo', {
+        uri: result.uri,
+        name: result.fileName,
+        type: result.type,
+      });
+
+        const profileRes = await updateProfileDetails(data, user._id);
+        if (profileRes.ok && profileRes.data) {
+          const profile = await getProfileDetails();
+          if (profile.ok && profile.data) {
+            dispatch(setCredentials(profile.data.data));
+            setLoading(false);
+          }
+        } else {
+          ToastNotification('error', `${profileRes.data?.message}`)
+          setLoading(false);
+        }
+    }
+  };
+
+  function handleLogout() {
+    nav.navigate(routes.AUTH);
+    setShowModal(false);
+  }
+
+  useEffect(() => {
+    handleSubscriptionStatus();
+    getWallet();
+  }, [isFocused]);
+
+  useEffect(() =>{
+    handleValidImg();
+  }, [profilePic])
+
+
+  return (
+    <>
+      <AppScreen scrollable containerStyle={{ paddingTop: 20 }}>
+        <TouchableOpacity onPress={goBack}>
+          <AppText className="font-ROBOTO_400 text-white text-[15px]">
+            Back
+          </AppText>
+        </TouchableOpacity>
+
+        <AppView className="flex-row items-center justify-between mt-3">
+          <AppView className="flex-row items-center gap-x-[14px]">
+            <AppView className="relative items-center justify-center">
+                <AppImage
+                  source={!isValidImg ? require('@/assets/images/user.png') :{
+                    uri: profilePic,
+                    priority: FastImage.priority.high,
+                  }}
+                  style={styles.image}
+                />
+              
+
+              {loading && (
+                <ActivityIndicator
+                  size={16}
+                  color={colors.WHITE}
+                  style={{ position: 'absolute' }}
+                />
+              )}
+            </AppView>
+
+            <AppView>
+              <AppText className="font-MANROPE_700 capitalize text-white text-lg">
+                {user.first_name} {user.last_name}
+              </AppText>
+              <AppText className="font-MANROPE_400 text-grey_100 text-[14px]">
+                Joined {formatDate(user.createdAt)}
+              </AppText>
+            </AppView>
+          </AppView>
+
+          <TouchableOpacity onPress={openGallery}>
+            <EditIcon />
+          </TouchableOpacity>
+        </AppView>
+
+        {/* Body */}
+        <AppView className="mt-11">
+          <AppText className="font-MANROPE_500 text-[16px] text-white uppercase">
+            ACCOUNT
+          </AppText>
+          <AppView className="mt-3 pt-5 pb-7 pl-4 pr-5 border border-[#C4C4C445] rounded-md bg-[#1A1A1AD9]">
+            <TouchableOpacity
+              onPress={() => navigate(routes.CHANGE_EMAIL)}
+              className="flex-row items-center justify-between my-4">
+              <AppView className="flex-row items-center">
+                <AccountDashboard />
+                <AppText className="ml-2 font-MANROPE_400 text-base text-white">
+                  {user.email}
+                </AppText>
+              </AppView>
+              {/* Arroa */}
+              <ArrowRight />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigate(routes.CHANGE_PASSWORD)}
+              className="flex-row items-center justify-between my-4">
+              <AppView className="flex-row items-center">
+                <PasswordDashboard />
+                <AppText className="ml-2 font-MANROPE_400 text-base text-white">
+                  Change Password
+                </AppText>
+              </AppView>
+              {/* Arroa */}
+              <ArrowRight />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigate(routes.CHANGE_PIN)}
+              className="flex-row items-center justify-between my-4">
+              <AppView className="flex-row items-center">
+                <PinDashboard />
+                <AppText className="ml-2 font-MANROPE_400 text-base text-white">
+                  Change Pin
+                </AppText>
+              </AppView>
+              {/* Arroa */}
+              <ArrowRight />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigate(routes.CHANGE_PHONE)}
+              className="flex-row items-center justify-between my-4">
+              <AppView className="flex-row items-center">
+                <PhoneDashboard />
+                <AppText className="ml-2 font-MANROPE_400 text-base text-white">
+                  {user.mobile}
+                </AppText>
+              </AppView>
+              {/* Arroa */}
+              <ArrowRight />
+            </TouchableOpacity>
+          </AppView>
+        </AppView>
+
+        <AppView className="mt-10">
+          <AppText className=" font-MANROPE_500 text-[16px] text-white uppercase">
+            BILLING
+          </AppText>
+          <AppView className="mt-3 pt-5 pb-7 pl-4 pr-5 border border-[#C4C4C445] rounded-md bg-[#1A1A1AD9]">
+            {billingService ? (
+              <AppView className="flex-row items-center justify-between mb-9">
+                <AppView className="flex-row items-center">
+                  <VisaCard />
+                  <AppView className="flex-row items-center ml-3">
+                    <CardDots />
+                    <AppText className="font-MANROPE_500 text-[15px] text-white ml-1.5">
+                      5071
+                    </AppText>
+                  </AppView>
+                </AppView>
+
+                <TouchableOpacity className="flex-row items-center mr-1.5">
+                  <Green_SubscripeIcon />
+                  <AppText className="font-MANROPE_400 text-[13px] text-green ml-1">
+                    Active Plan
+                  </AppText>
+                </TouchableOpacity>
+              </AppView>
+            ) : (
+              <TouchableOpacity
+              disabled
+                onPress={() =>
+                  // navigate(routes.SUBSCRIPTION_SCREEN, { tab: 'getSubscription' })
+                  console.log('first')
+                }
+                className="flex-row items-center gap-x-2 mb-7 opacity-50">
+                <SubscribeIcon />
+                <AppText className=" font-MANROPE_400 text-yellow text-base">
+                  Get Subscription
+                </AppText>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity disabled className="flex-row items-center justify-between opacity-50 ml-1 mb-8">
+              <AppText className=" font-MANROPE_400 text-[16px] text-white">
+                {billingService
+                  ? 'Your next billing date is Jan 14, 2024'
+                  : 'Your next billing date is not available'}
+              </AppText>
+              <ArrowRight />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigate(routes.TRANSACTION_HISTORY_SCREEN)}
+              className="flex-row items-center justify-between">
+              <AppText className="ml-2 font-MANROPE_400 text-[16px] text-white">
+                View your Reeplay transaction history
+              </AppText>
+              {/* Arroa */}
+              <ArrowRight />
+            </TouchableOpacity>
+
+            <AppView className="mt-10">
+              {wallet ? (
+                <AppView className="flex-row items-center w-full justify-between">
+                  <View className='flex-row items-center flex-wrap gap-5'>
+                  <TouchableOpacity 
+                  onPress={() => 
+                     navigate(routes.SUBSCRIPTION_SCREEN, {
+                        tab: 'topup',
+                        currency:'NGN'
+                      })
+                  }
+                  className="px-5 pt-1.5 pb-2.5 rounded-[5px] bg-[#286009]">
+                    <AppText className="font-MANROPE_400 text-[9px] text-white">
+                     NGN balance
+                    </AppText>
+                    <AppText className="font-MANROPE_700 text-white text-lg text-left">
+                      ₦{formatAmount(wallet.NGNBalance.toString())}.00
+                    </AppText>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                  onPress={() => 
+                     navigate(routes.SUBSCRIPTION_SCREEN, {
+                        tab: 'topup',
+                        currency:'USD'
+                      })
+                  }
+                  className="px-6 pt-1.5 pb-2.5 rounded-md bg-[#2873C8]">
+                    <AppText className="font-MANROPE_400 text-[9px] text-white">
+                     USD balance
+                    </AppText>
+                    <AppText className="font-MANROPE_700 text-white text-lg text-left">
+                      ${formatAmount(wallet.USDBalance.toString())}.00
+                    </AppText>
+                  </TouchableOpacity>
+
+                  </View>
+                </AppView>
+              ) : (
+                <AppButton
+                  bgColor={colors.RED}
+                  title="Top up"
+                  onPress={() =>
+                    // navigate(routes.SUBSCRIPTION_SCREEN, { tab: 'topup' })
+                    console.log('first')
+                  }
+                  style={{
+                    width: '100%',
+                    borderRadius: 5,
+                    paddingVertical: Size.calcHeight(15),
+                  }}
+                />
+              )}
+            </AppView>
+          </AppView>
+        </AppView>
+
+        <AppView className="mt-6 ml-6 mb-10">
+          <Pressable
+            onPress={() =>
+              billingService
+                ? navigate(routes.CANCEL_SUBSCRIPTION_SCREEN)
+                : setShowModal(true)
+            }>
+            <AppText className=" font-MANROPE_400 text-sm text-[#DE3B40]">
+              {billingService ? 'Cancel Subscription' : 'Log out'}
+            </AppText>
+          </Pressable>
+          <Pressable onPress={() => navigate(routes.DELETE_ACCOUNT_SCREEN)}>
+            <AppText className="mt-3 font-MANROPE_400 text-sm text-light_blue">
+              Delete account
+            </AppText>
+          </Pressable>
+        </AppView>
+      </AppScreen>
+
+      <AppModal
+        isModalVisible={showModal}
+        replaceDefaultContent={
+          <AppView className="">
+            <AppText className="mt-4 font-ROBOTO_400 text-sm text-black text-center leading-5">
+              Are you sure you want to {'\n'}Logout?
+            </AppText>
+
+            <AppView className="mt-7" />
+            <AppButton
+              bgColor={colors.DARK_GREY}
+              title="No"
+              onPress={() => setShowModal(false)}
+              style={styles.btn}
+              labelStyle={styles.btnLabel}
+            />
+            <AppButton
+              bgColor={colors.RED}
+              title="Yes"
+              onPress={() => handleLogout()}
+              style={styles.btn}
+              labelStyle={styles.btnLabel}
+            />
+          </AppView>
+        }
+        handleClose={() => setShowModal(false)}
+      />
+    </>
+  );
+};
+
+export default AccountScreen;
+
+const styles = StyleSheet.create({
+  image:{
+                    width: 65,
+                    height: 65,
+                    borderRadius: 99,
+                  },
+  btnLabel: {
+    fontFamily: fonts.ROBOTO_700,
+    fontSize: 16,
+    color: colors.GREY_100,
+    marginLeft: 8,
+    marginTop: 1,
+  },
+  btn: {
+    width: Size.getWidth() * 0.4,
+    paddingTop: Size.calcHeight(9),
+    paddingBottom: Size.calcHeight(8),
+    borderRadius: 4,
+    marginVertical: 5,
+  },
+});
